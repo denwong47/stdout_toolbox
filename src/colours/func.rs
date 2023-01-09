@@ -1,14 +1,16 @@
 use super::{
-    ANSI256Colours,
+    ForegroundColours,
+    BackgroundColours,
     ANSIIntensity,
 
-    ANSIApply,
+    ANSIWrapper,
 };
 
 /// Produce a colouring factory of the particular style.
+#[allow(dead_code)]
 pub fn colouriser<T>(
-    fg: Option<ANSI256Colours>,
-    bg: Option<ANSI256Colours>,
+    fg: Option<ForegroundColours>,
+    bg: Option<BackgroundColours>,
     intensity: Option<ANSIIntensity>,
 ) -> impl Fn(&T) -> String
 where   T: ToString
@@ -17,15 +19,15 @@ where   T: ToString
         let mut result = s.to_string();
 
         if let Some(colour) = &fg {
-            result = colour.foreground(&result)
+            result = colour.wraps(&result)
         }
 
         if let Some(colour) = &bg {
-            result = colour.background(&result)
+            result = colour.wraps(&result)
         }
 
         if let Some(modifier) = &intensity {
-            result = modifier.apply(&result)
+            result = modifier.wraps(&result)
         }
 
         result
