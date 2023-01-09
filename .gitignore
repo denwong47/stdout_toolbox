@@ -1,0 +1,14 @@
+/target
+
+.DS_Store
+
+
+
+# VSCode
+.vscode/
+
+
+
+# Environment variables
+**/envfile
+
