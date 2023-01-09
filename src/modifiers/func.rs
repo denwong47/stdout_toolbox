@@ -1,9 +1,9 @@
 use super::{
     ForegroundColours,
     BackgroundColours,
-    ANSIIntensity,
+    Intensity,
 
-    ANSIWrapper,
+    Modifier,
 };
 
 /// Produce a colouring factory of the particular style.
@@ -11,7 +11,7 @@ use super::{
 pub fn colouriser<T>(
     fg: Option<ForegroundColours>,
     bg: Option<BackgroundColours>,
-    intensity: Option<ANSIIntensity>,
+    intensity: Option<Intensity>,
 ) -> impl Fn(&T) -> String
 where   T: ToString
 {

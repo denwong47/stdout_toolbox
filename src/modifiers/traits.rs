@@ -18,18 +18,18 @@ pub trait HasResetter {
     fn resetter(&self) -> Self;
 }
 
-pub trait ANSIWrapper {
+pub trait Modifier {
     fn wraps<T>(&self, s: &T) -> String
     where T: ToString;
 }
-pub trait ANSIJoinable {
+pub trait JointModifier {
     type Output;
 
     fn join<T>(self, rhs: T) -> Self::Output
     where T: HasValue<String>+HasResetter;
 }
 
-impl<U> ANSIWrapper for U
+impl<U> Modifier for U
 where U: HasValue<String>+HasResetter+Sized {
     fn wraps<T>(&self, s: &T) -> String
     where T: ToString {
@@ -40,7 +40,7 @@ where U: HasValue<String>+HasResetter+Sized {
     }
 }
 
-impl<U> ANSIJoinable for U
+impl<U> JointModifier for U
 where U: HasValue<String>+HasResetter {
     type Output = ANSIModifiers;
 

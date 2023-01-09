@@ -2,13 +2,13 @@ use duplicate::duplicate_item;
 use super::super::{HasValue, HasResetter};
 
 #[allow(dead_code)]
-pub enum ANSIIntensity {
+pub enum Intensity {
     Normal,
     Bold,
     Faint,
 }
 #[allow(dead_code)]
-impl HasValue<u8> for ANSIIntensity {
+impl HasValue<u8> for Intensity {
 
     fn value(&self) -> u8 {
         match self {
@@ -20,7 +20,7 @@ impl HasValue<u8> for ANSIIntensity {
 
 }
 #[allow(dead_code)]
-impl HasResetter for ANSIIntensity {
+impl HasResetter for Intensity {
 
     fn resetter(&self) -> Self {
         Self::Normal
