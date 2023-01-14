@@ -18,14 +18,14 @@ fn main() {
     // let s = String::from("Hello, World!");
     // println!("{}", style1(&s));
 
-    let bar = ProgressStyle::GrayscaleToWhite.bar(60, Some(10));
+    let bar = ProgressStyle::GrayscaleToWhite.bar(60, Some(6));
 
-    let size: usize = 500;
+    let size: usize = 2000;
 
     (0..size)
         .into_iter()
         .progressed(&bar, size, Some("Progressing... "), None)
-        .for_each(|_| thread::sleep(time::Duration::from_micros(1)));
+        .for_each(|_| thread::sleep(time::Duration::from_micros(1000)));
 
     println!("\nFinished.");
 }

@@ -295,6 +295,7 @@ pub enum __enum_name__ {
     [ ForegroundColours ];
     [ BackgroundColours ];
 )]
+#[allow(dead_code)]
 impl __enum_name__ {
     pub fn iter_grayscale() -> impl Iterator<Item = Self>{
         vec![
