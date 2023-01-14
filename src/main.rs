@@ -19,17 +19,12 @@ fn main() {
 
     let bar = ProgressStyle::DropBlocks.bar(60);
 
-    let size:usize = 10000;
+    let size: usize = 10000;
 
     (0..size)
-    .into_iter()
-    .progressed(
-        &bar,
-        size,
-        Some("Progressing... "),
-        None,
-    )
-    .for_each(|_| thread::sleep(time::Duration::from_millis(2)));
+        .into_iter()
+        .progressed(&bar, size, Some("Progressing... "), None)
+        .for_each(|_| thread::sleep(time::Duration::from_millis(2)));
 
     println!("\nFinished.");
 }

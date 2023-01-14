@@ -10,9 +10,15 @@ impl ProgressStyle {
     pub fn bar(&self, length: usize) -> ProgressBar {
         match self {
             Self::Arrow => ProgressBar::new("\x20>=", length),
-            Self::Blocks => ProgressBar::new("\x20\u{258f}\u{258e}\u{258d}\u{258c}\u{258b}\u{258a}\u{2589}\u{2588}", length),
+            Self::Blocks => ProgressBar::new(
+                "\x20\u{258f}\u{258e}\u{258d}\u{258c}\u{258b}\u{258a}\u{2589}\u{2588}",
+                length,
+            ),
             Self::Density => ProgressBar::new("\x20\u{2591}\u{2592}\u{2593}\u{2588}", length),
-            Self::DropBlocks => ProgressBar::new("\x20\u{2598}\u{2596}\u{259E}\u{2584}\u{2599}\u{2588}", length),
+            Self::DropBlocks => ProgressBar::new(
+                "\x20\u{2598}\u{2596}\u{259E}\u{2584}\u{2599}\u{2588}",
+                length,
+            ),
         }
     }
 }
@@ -31,11 +37,13 @@ impl ProgressBar {
     }
 
     pub fn from_iter<T>(iter: T, length: usize) -> Self
-    where T: Iterator<Item=String>, {
+    where
+        T: Iterator<Item = String>,
+    {
         return Self {
             chars: iter.collect(),
             length: length,
-        }
+        };
     }
 
     pub fn draw(&self, progress: f64) -> String {
@@ -55,11 +63,12 @@ impl ProgressBar {
                 s
             })
     }
-
 }
 
 pub struct ProgressedIterator<'a, T, I>
-where I: Iterator<Item=T> {
+where
+    I: Iterator<Item = T>,
+{
     iter: I,
     bar: &'a ProgressBar,
     total: usize,
@@ -68,8 +77,10 @@ where I: Iterator<Item=T> {
 
     counter: usize,
 }
-impl<'a, T, I> ProgressedIterator<'a, T, I> 
-where I: Iterator<Item=T> {
+impl<'a, T, I> ProgressedIterator<'a, T, I>
+where
+    I: Iterator<Item = T>,
+{
     pub fn new(
         iter: I,
         bar: &'a ProgressBar,
@@ -84,14 +95,14 @@ where I: Iterator<Item=T> {
             prefix: prefix.unwrap_or("").to_string(),
             suffix: suffix.unwrap_or("").to_string(),
             counter: 0,
-        }
+        };
     }
 
     pub fn display(&self) {
-        let mut len_count:usize = 0;
-        let mut to_print:String = String::new();
-        let progress = self.counter as f64/self.total as f64;
-        
+        let mut len_count: usize = 0;
+        let mut to_print: String = String::new();
+        let progress = self.counter as f64 / self.total as f64;
+
         len_count += self.prefix.len();
         to_print.push_str(&self.prefix);
 
@@ -101,7 +112,7 @@ where I: Iterator<Item=T> {
         to_print.push('|');
 
         len_count += 8;
-        to_print.push_str(&format!(" {:3.2}%", (progress*100.).min(100.)));
+        to_print.push_str(&format!(" {:3.2}%", (progress * 100.).min(100.)));
 
         len_count += self.suffix.len();
         to_print.push_str(&self.suffix);
@@ -116,7 +127,9 @@ where I: Iterator<Item=T> {
     }
 }
 impl<'a, T, I> Iterator for ProgressedIterator<'a, T, I>
-where I: Iterator<Item=T> {
+where
+    I: Iterator<Item = T>,
+{
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -124,7 +137,7 @@ where I: Iterator<Item=T> {
             self.display();
         }
         self.counter += 1;
-        
+
         let _return = self.iter.next();
 
         self.display();
@@ -133,9 +146,10 @@ where I: Iterator<Item=T> {
     }
 }
 
-
 pub trait Progressed<T, I>
-where I: Iterator<Item=T> {
+where
+    I: Iterator<Item = T>,
+{
     fn progressed<'a>(
         self,
         bar: &'a ProgressBar,
@@ -145,22 +159,17 @@ where I: Iterator<Item=T> {
     ) -> ProgressedIterator<'a, T, I>;
 }
 
-impl<T, I> Progressed<T, I> for I 
-where I: Iterator<Item=T> {
+impl<T, I> Progressed<T, I> for I
+where
+    I: Iterator<Item = T>,
+{
     fn progressed<'a>(
         self,
         bar: &'a ProgressBar,
         total: usize,
         prefix: Option<&str>,
         suffix: Option<&str>,
-    ) -> ProgressedIterator<'a, T, I>
-    {
-        return ProgressedIterator::new(
-            self,
-            bar,
-            total,
-            prefix,
-            suffix,
-        )
+    ) -> ProgressedIterator<'a, T, I> {
+        return ProgressedIterator::new(self, bar, total, prefix, suffix);
     }
 }
