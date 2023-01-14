@@ -297,7 +297,7 @@ pub enum __enum_name__ {
 )]
 #[allow(dead_code)]
 impl __enum_name__ {
-    pub fn iter_grayscale() -> impl Iterator<Item = Self>{
+    pub fn iter_grayscale() -> impl Iterator<Item = Self> {
         vec![
             Self::Grayscale00,
             Self::Grayscale01,
@@ -323,7 +323,8 @@ impl __enum_name__ {
             Self::Grayscale21,
             Self::Grayscale22,
             Self::Grayscale23,
-        ].into_iter()
+        ]
+        .into_iter()
     }
 }
 #[duplicate_item(

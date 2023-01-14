@@ -12,7 +12,7 @@ pub enum ProgressStyle {
 impl ProgressStyle {
     pub fn bar(&self, length: usize, blur: Option<usize>) -> ProgressBar {
         match self {
-            Self::Arrow => ProgressBar::new("\x20>=", length, None,),
+            Self::Arrow => ProgressBar::new("\x20>=", length, None),
             Self::Blocks => ProgressBar::new(
                 "\x20\u{258f}\u{258e}\u{258d}\u{258c}\u{258b}\u{258a}\u{2589}\u{2588}",
                 length,
@@ -25,18 +25,11 @@ impl ProgressStyle {
                 blur,
             ),
             Self::GrayscaleToWhite => ProgressBar::from_iter(
-                BackgroundColours::iter_grayscale()
-                .map(
-                    | colour | colour.wraps(&" ".to_string())
-                ),
+                BackgroundColours::iter_grayscale().map(|colour| colour.wraps(&" ".to_string())),
                 length,
                 blur,
             ),
-            Self::Numbers => ProgressBar::new(
-                "\x20123456789.",
-                length,
-                None,
-            ),
+            Self::Numbers => ProgressBar::new("\x20123456789.", length, None),
         }
     }
 }
@@ -72,18 +65,17 @@ impl ProgressBar {
         let ratio_per_segment = 1. / (self.length as f64);
         let blur_ratio = (1 + self.blur * 2) as f64;
 
-        let progress_capped = {
-            progress
-            .min(1.)
-            .max(0.)
-        } * (1. + ratio_per_segment*2.*self.blur as f64) - ratio_per_segment*self.blur as f64;
+        let progress_capped = { progress.min(1.).max(0.) }
+            * (1. + ratio_per_segment * 2. * self.blur as f64)
+            - ratio_per_segment * self.blur as f64;
         (0..self.length)
             .into_iter()
             .map(|pos| {
-                (progress_capped - ratio_per_segment * (pos as f64-self.blur as f64))
-                .min(ratio_per_segment * blur_ratio)
-                .max(0.)
-                    / ratio_per_segment / blur_ratio
+                (progress_capped - ratio_per_segment * (pos as f64 - self.blur as f64))
+                    .min(ratio_per_segment * blur_ratio)
+                    .max(0.)
+                    / ratio_per_segment
+                    / blur_ratio
             })
             .map(|segment_ratio| (segment_ratio * (self.chars.len() - 1) as f64).round() as usize)
             .map(|idx| &self.chars[idx])
