@@ -1,7 +1,6 @@
 use super::*;
 
-pub struct ANSIModifiers
-{
+pub struct ANSIModifiers {
     pub applicator: String,
     pub resetter: String,
 }
@@ -24,19 +23,22 @@ impl ANSIModifiers {
         return Self {
             applicator: String::new(),
             resetter: String::new(),
-        }
+        };
     }
 
     pub fn from<T>(obj: T) -> Self
-    where T: HasValue<String>+HasResetter {
+    where
+        T: HasValue<String> + HasResetter,
+    {
         return Self {
             applicator: obj.value(),
             resetter: obj.resetter().value(),
-        }
+        };
     }
 
-    pub fn join<T>(mut self, rhs: T) -> Self 
-    where T: HasValue<String>+HasResetter
+    pub fn join<T>(mut self, rhs: T) -> Self
+    where
+        T: HasValue<String> + HasResetter,
     {
         self.applicator += &rhs.value();
         self.resetter = rhs.resetter().value() + &self.resetter;
@@ -44,11 +46,10 @@ impl ANSIModifiers {
         self
     }
 
-    pub fn wrapper<T>(self)
-    -> impl Fn(&T) -> String
-    where   T: ToString {
-        move | s: &T | {
-            self.wraps(s)
-        }
+    pub fn wrapper<T>(self) -> impl Fn(&T) -> String
+    where
+        T: ToString,
+    {
+        move |s: &T| self.wraps(s)
     }
 }

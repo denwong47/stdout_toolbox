@@ -1,10 +1,4 @@
-use super::{
-    ForegroundColours,
-    BackgroundColours,
-    Intensity,
-
-    Modifier,
-};
+use super::{BackgroundColours, ForegroundColours, Intensity, Modifier};
 
 /// Produce a colouring factory of the particular style.
 #[allow(dead_code)]
@@ -13,9 +7,10 @@ pub fn colouriser<T>(
     bg: Option<BackgroundColours>,
     intensity: Option<Intensity>,
 ) -> impl Fn(&T) -> String
-where   T: ToString
+where
+    T: ToString,
 {
-    move | s: &T | {
+    move |s: &T| {
         let mut result = s.to_string();
 
         if let Some(colour) = &fg {

@@ -1,4 +1,4 @@
-use super::super::{HasValue, HasResetter};
+use super::super::{HasResetter, HasValue};
 
 #[allow(dead_code)]
 pub enum MoveCursor {
@@ -21,11 +21,7 @@ impl HasValue<String> for MoveCursor {
             Self::Absolute(x, y) => ("H", format!("{};{}", y, x)),
         };
 
-        format!(
-            "\x1b[{}{}",
-            magnitude,
-            command_char,
-        )
+        format!("\x1b[{}{}", magnitude, command_char,)
     }
 }
 #[allow(dead_code)]
