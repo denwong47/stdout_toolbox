@@ -291,6 +291,41 @@ pub enum __enum_name__ {
     Reset,
 }
 #[duplicate_item(
+    __enum_name__;
+    [ ForegroundColours ];
+    [ BackgroundColours ];
+)]
+impl __enum_name__ {
+    pub fn iter_grayscale() -> impl Iterator<Item = Self>{
+        vec![
+            Self::Grayscale00,
+            Self::Grayscale01,
+            Self::Grayscale02,
+            Self::Grayscale03,
+            Self::Grayscale04,
+            Self::Grayscale05,
+            Self::Grayscale06,
+            Self::Grayscale07,
+            Self::Grayscale08,
+            Self::Grayscale09,
+            Self::Grayscale10,
+            Self::Grayscale11,
+            Self::Grayscale12,
+            Self::Grayscale13,
+            Self::Grayscale14,
+            Self::Grayscale15,
+            Self::Grayscale16,
+            Self::Grayscale17,
+            Self::Grayscale18,
+            Self::Grayscale19,
+            Self::Grayscale20,
+            Self::Grayscale21,
+            Self::Grayscale22,
+            Self::Grayscale23,
+        ].into_iter()
+    }
+}
+#[duplicate_item(
     __enum_name__           __apply__           __reset__;
     [ ForegroundColours ]   [ "\x1b[38:5:{}m" ] [ "\x1b[39m" ];
     [ BackgroundColours ]   [ "\x1b[48:5:{}m" ] [ "\x1b[49m" ];

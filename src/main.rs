@@ -1,4 +1,5 @@
 mod modifiers;
+#[allow(unused_imports)]
 use modifiers::*;
 
 mod progress;
@@ -17,14 +18,14 @@ fn main() {
     // let s = String::from("Hello, World!");
     // println!("{}", style1(&s));
 
-    let bar = ProgressStyle::DropBlocks.bar(60);
+    let bar = ProgressStyle::GrayscaleToWhite.bar(60, Some(10));
 
-    let size: usize = 10000;
+    let size: usize = 500;
 
     (0..size)
         .into_iter()
         .progressed(&bar, size, Some("Progressing... "), None)
-        .for_each(|_| thread::sleep(time::Duration::from_millis(2)));
+        .for_each(|_| thread::sleep(time::Duration::from_micros(1)));
 
     println!("\nFinished.");
 }
