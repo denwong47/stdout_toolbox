@@ -12,16 +12,23 @@ pub enum MoveCursor {
 #[allow(dead_code)]
 impl HasValue<String> for MoveCursor {
     fn value(&self) -> String {
-        let (command_char, magnitude) = match self {
-            Self::Up(magnitude) => ("A", magnitude.to_string()),
-            Self::Down(magnitude) => ("B", magnitude.to_string()),
-            Self::Right(magnitude) => ("C", magnitude.to_string()),
-            Self::Left(magnitude) => ("D", magnitude.to_string()),
-            Self::Origin => ("H", String::new()),
-            Self::Absolute(x, y) => ("H", format!("{};{}", y, x)),
-        };
-
-        format!("\x1b[{}{}", magnitude, command_char,)
+        match self {
+            // By default, shell treat commands with 0 magnitude as 1.
+            // There are many reasons why 0 would mean actual 0, so we give an empty string instead.
+            Self::Up(0) | Self::Down(0) | Self::Left(0) | Self::Right(0) => String::new(),
+            _ => {
+                let (command_char, magnitude) = match self {
+                    Self::Up(magnitude) => ("A", magnitude.to_string()),
+                    Self::Down(magnitude) => ("B", magnitude.to_string()),
+                    Self::Right(magnitude) => ("C", magnitude.to_string()),
+                    Self::Left(magnitude) => ("D", magnitude.to_string()),
+                    Self::Origin => ("H", String::new()),
+                    Self::Absolute(x, y) => ("H", format!("{};{}", y, x)),
+                };
+        
+                format!("\x1b[{}{}", magnitude, command_char,)
+            }
+        }
     }
 }
 #[allow(dead_code)]
