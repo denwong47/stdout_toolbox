@@ -1,7 +1,7 @@
 use crate::modifiers::LengthWithoutModifiers;
 
 use lazy_static::lazy_static;
-use regex::{Match, Regex, Split};
+use regex::Regex;
 
 use super::*;
 
@@ -72,11 +72,71 @@ impl<'t> Iterator for SplitWords<'t> {
     }
 }
 
+pub struct SplitLines<'t>{
+    iter: SplitWords<'t>,
+    cached: String,
+    line_length: usize,
+}
+impl<'t> Iterator for SplitLines<'t> {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut result = self.cached.clone();
+
+        if result.len_without_modifiers() >= self.line_length-1 {
+            self.cached = result.get(self.line_length-1..).unwrap().to_owned();
+            return Some(result.get(..self.line_length-1).unwrap().to_owned() + "-")
+        }
+        loop {
+            if let Some((next_word, next_sep)) = self.iter.next() {
+                let new_len = {
+                    result.len_without_modifiers()
+                    + next_word.len_without_modifiers()
+                    + next_sep.map_or(0, |_| 1)
+                };
+
+                if new_len > self.line_length {
+                    // Line full
+                    self.cached = String::from(next_word);
+                    if let Some(c) = next_sep {
+                        self.cached.push(c)
+                    }
+
+                    break
+                } else {
+                    // Line still have space, continue
+                    result.push_str(&next_word);
+
+                    if let Some(c) = next_sep {
+                        result.push(c)
+                    }
+                }
+            } else {
+                break
+            }
+        }
+
+        match result.len() {
+            0 => None,
+            _ => Some(result)
+        }
+    }
+}
+
 pub trait DissembleString{
     fn iter_words(&self) -> SplitWords;
+    fn iter_lines(&self, line_length: usize) -> SplitLines;
 }
 impl DissembleString for &str {
     fn iter_words(&self) -> SplitWords {
         return SplitWords::from(*self)
+    }
+
+    fn iter_lines(&self, line_length: usize) -> SplitLines {
+        return SplitLines {
+            iter: self.iter_words(),
+            cached: String::new(),
+            line_length,
+        }
     }
 }
