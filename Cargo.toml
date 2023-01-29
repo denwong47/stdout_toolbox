@@ -15,3 +15,5 @@ path = "src/lib.rs"
 
 [dependencies]
 duplicate = "0"
+lazy_static = "1"
+regex = "1"

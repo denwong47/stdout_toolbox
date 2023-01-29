@@ -5,7 +5,11 @@ use modifiers::*;
 mod progress;
 use progress::*;
 
+mod text;
+use text::*;
+
 use std::{thread, time};
+
 
 fn main() {
     // let style1 = {
