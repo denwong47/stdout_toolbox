@@ -1,5 +1,5 @@
 use std::mem::swap;
-use crate::modifiers::LengthWithoutModifiers;
+use crate::modifiers::{LengthWithoutModifiers, ForegroundColours, Modifier};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -60,9 +60,36 @@ impl<'t> Iterator for SplitLines<'t> {
         swap(&mut result, &mut self.cached);
 
         if result.len_without_modifiers() >= self.line_length-1 {
-            self.cached = result.get(self.line_length-1..).unwrap().to_owned();
-            return Some(result.get(..self.line_length-1).unwrap().to_owned() + "-")
+            self.cached = result.get(self.line_length-1..).unwrap_or("").to_owned();
+
+            result = result.get(..self.line_length-1).unwrap().to_owned();
+            if result.chars().last().map(|c| !c.is_whitespace()).unwrap_or(false) {
+                result += "-";
+            }
+
+            return Some(result)
         }
+
+        let last_char = {
+            result
+            .chars()
+            .last()
+            .and_then(
+                | c | SpecialUnicodeChar::find_char(c)
+            )
+        };
+
+        if last_char.map(| m | m.is_new_line())
+           .unwrap_or(false) {
+            // This can occur when
+            // - "A long sentence that finishes with a\n" gets full after "with",
+            // - then "a\n" will enter self.cache, but it shall not be appended to
+            //   because the next time `next` is called, we should just return "a".
+            // - that's why we need to check blank lines here.
+            drop(result.pop()); // We don't need the new line char itself.
+            return Some(result)
+        }
+
         loop {
             if let Some((next_word, next_sep)) = self.iter.next() {
                 let new_len = {
@@ -75,12 +102,14 @@ impl<'t> Iterator for SplitLines<'t> {
                     // Line full
                     self.cached = String::from(next_word);
                     next_sep.append_to(&mut self.cached);
-
                     break
                 } else if next_sep.is_new_line() {
                     // Line not full, but new line detected
                     result.push_str(&next_word);
-                    next_sep.append_to(&mut result);
+
+                    if next_sep.is_needed_end_of_line(){
+                        next_sep.append_to(&mut result);
+                    }
                     break
                 } else {
                     // Line still have space, continue
@@ -94,7 +123,21 @@ impl<'t> Iterator for SplitLines<'t> {
 
         match result.len() {
             0 => None,
-            _ => Some(result)
+            _ => {
+                let last_char = result.pop().unwrap();
+
+                if let Some(m) = SpecialUnicodeChar::find_char(last_char) {
+                    if m.is_needed_end_of_line() {
+                        // If we need it, push it back
+                        result.push(last_char)
+                    }
+                } else {
+                    // If its not a special character, put it back
+                    result.push(last_char)
+                }
+                
+                Some(result)
+            }
         }
     }
 }
