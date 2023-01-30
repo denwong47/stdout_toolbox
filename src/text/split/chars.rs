@@ -67,18 +67,18 @@ impl SpecialUnicodeChar {
             Self::Hyphen => Some('\u{002D}'),
         }
     }
-    
+
     pub fn find_char(c: char) -> Option<Self> {
-        Self::iter().find(| m | m.char().as_ref() == Some(&c))
+        Self::iter().find(|m| m.char().as_ref() == Some(&c))
     }
 
     pub fn all_non_breaking_chars() -> String {
         Self::iter()
-            .filter(| m | !m.is_breaking())
-            .fold(String::new(), | mut lhs, rhs | {
+            .filter(|m| !m.is_breaking())
+            .fold(String::new(), |mut lhs, rhs| {
                 match rhs.char() {
                     Some(c) => lhs.push(c),
-                    None => ()
+                    None => (),
                 }
 
                 lhs
@@ -87,34 +87,28 @@ impl SpecialUnicodeChar {
 
     pub fn is_breaking(&self) -> bool {
         match self {
-            Self::NoBreakSpace
-            | Self::NarrowNoBreakSpace
-            | Self::FigureSpace
-            | Self::Nothing => true,
+            Self::NoBreakSpace | Self::NarrowNoBreakSpace | Self::FigureSpace | Self::Nothing => {
+                true
+            }
             _ => false,
         }
     }
 
     pub fn is_new_line(&self) -> bool {
         match self {
-            Self::CarriageReturn
-            | Self::LineFeed
-            | Self::LineSeparator => true,
+            Self::CarriageReturn | Self::LineFeed | Self::LineSeparator => true,
             _ => false,
         }
     }
 
     pub fn is_needed_end_of_line(&self) -> bool {
         match self {
-            Self::EnDash
-            | Self::EmDash
-            | Self::Minus
-            | Self::Hyphen => true,
+            Self::EnDash | Self::EmDash | Self::Minus | Self::Hyphen => true,
             _ => false,
         }
     }
 
-    pub fn append_to(&self, s:&mut String) {
+    pub fn append_to(&self, s: &mut String) {
         match self.char() {
             Some(c) => s.push(c),
             None => (),

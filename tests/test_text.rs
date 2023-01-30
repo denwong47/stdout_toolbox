@@ -6,23 +6,26 @@ fn test_ansi_modifierless_length() {
     let test_str = "The quick brown fox jumps over the lazy dog.";
 
     assert_eq!(test_str.len(), test_str.len_without_modifiers());
-    assert_eq!(test_str.len(), 
+    assert_eq!(
+        test_str.len(),
         ForegroundColours::BrightCyan
-        .wraps(&test_str)
-        .len_without_modifiers()
+            .wraps(&test_str)
+            .len_without_modifiers()
     );
-    assert_eq!(test_str.len(), 
+    assert_eq!(
+        test_str.len(),
         ForegroundColours::BrightCyan
-        .join(BackgroundColours::BrightGreen)
-        .wraps(&test_str)
-        .len_without_modifiers()
+            .join(BackgroundColours::BrightGreen)
+            .wraps(&test_str)
+            .len_without_modifiers()
     );
-    assert_eq!(test_str.len(), 
+    assert_eq!(
+        test_str.len(),
         ForegroundColours::BrightCyan
-        .join(MoveCursor::Right(20))
-        .join(MoveCursor::Up(20))
-        .wraps(&test_str)
-        .len_without_modifiers()
+            .join(MoveCursor::Right(20))
+            .join(MoveCursor::Up(20))
+            .wraps(&test_str)
+            .len_without_modifiers()
     );
 
     // ForegroundColours::BrightCyan
@@ -82,15 +85,12 @@ fn __name__() {
     let text = __text__;
     let words = Vec::from(__words__);
 
-    text
-    .iter_words()
-    .zip(words)
-    .for_each(
-        | ((word, sep), answer) | {
+    text.iter_words()
+        .zip(words)
+        .for_each(|((word, sep), answer)| {
             println!("Ouput: {:?} Answer: {:?}", (word.as_str(), &sep), answer);
             assert_eq!((word.as_str(), sep), answer)
-        }
-    );
+        });
 }
 
 #[test]

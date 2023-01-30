@@ -10,7 +10,6 @@ mod text;
 
 use std::{thread, time};
 
-
 fn main() {
     // let style1 = {
     //     ForegroundColours::R0G1B2

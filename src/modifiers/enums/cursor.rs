@@ -25,7 +25,7 @@ impl HasValue<String> for MoveCursor {
                     Self::Origin => ("H", String::new()),
                     Self::Absolute(x, y) => ("H", format!("{};{}", y, x)),
                 };
-        
+
                 format!("\x1b[{}{}", magnitude, command_char,)
             }
         }
