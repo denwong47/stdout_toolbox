@@ -17,3 +17,5 @@ path = "src/lib.rs"
 duplicate = "0"
 lazy_static = "1"
 regex = "1"
+strum = { version = "0", features = ["derive"] }
+strum_macros = { version = "0" }

@@ -1,3 +1,4 @@
+use std::mem::swap;
 use crate::modifiers::LengthWithoutModifiers;
 
 use lazy_static::lazy_static;
@@ -8,34 +9,7 @@ use super::*;
 lazy_static! {
     static ref MODIFIER_PATTERN: Regex = {
         let mut breaking_chars = String::from(r#"^(?P<word>.*?)(?P<sep>["#);
-        breaking_chars.push(TAB);
-        breaking_chars.push(LINE_FEED);
-        breaking_chars.push(CARRIAGE_RETURN);
-        breaking_chars.push(SPACE);
-        // breaking_chars.push(NO_BREAK_SPACE);
-        breaking_chars.push(OGHAM_SPACE_MARK);
-        breaking_chars.push(EN_QUAD);
-        breaking_chars.push(EM_QUAD);
-        breaking_chars.push(EN_SPACE);
-        breaking_chars.push(EM_SPACE);
-        breaking_chars.push(THREE_PER_EM_SPACE);
-        breaking_chars.push(FOUR_PER_EM_SPACE);
-        breaking_chars.push(SIX_PER_EM_SPACE);
-        breaking_chars.push(FIGURE_SPACE);
-        breaking_chars.push(PUNCTUATION_SPACE);
-        breaking_chars.push(THIN_SPACE);
-        breaking_chars.push(HAIR_SPACE);
-        breaking_chars.push(LINE_SEPARATOR);
-        breaking_chars.push(PARAGRAPH_SEPARATOR);
-        // breaking_chars.push(NARROW_NO_BREAK_SPACE);
-        breaking_chars.push(MEDIUM_MATH_SPACE);
-        breaking_chars.push(IDEOGRAPHIC_SPACE);
-        breaking_chars.push(EN_DASH);
-        breaking_chars.push(EM_DASH);
-        breaking_chars.push(MINUS);
-
-        // Last one to avoid it being read as a Regex Modifier
-        breaking_chars.push(HYPHEN);
+        breaking_chars.push_str(&SpecialUnicodeChar::all_non_breaking_chars());
         breaking_chars.push_str(r#"])"#);
 
         Regex::new(&breaking_chars).unwrap()
@@ -55,16 +29,17 @@ impl<'t> From<&'t str> for SplitWords<'t> {
     }
 }
 impl<'t> Iterator for SplitWords<'t> {
-    type Item = (String, Option<char>);
+    type Item = (String, SpecialUnicodeChar);
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(subtext) = self.text.get(self.pos..) {
             if let Some(item) = MODIFIER_PATTERN.captures(subtext) {
                 self.pos += item["word"].len() + 1;
-                return Some((item["word"].to_owned(), Some(item["sep"].chars().next().unwrap())))
+                return Some((item["word"].to_owned(), SpecialUnicodeChar::find_char(item["sep"].chars().next().unwrap()).unwrap_or(SpecialUnicodeChar::Nothing)))
             } else {
                 // Last word without an ending sep
-                return Some((subtext.to_owned(), None))
+                self.pos += subtext.len() + 1;
+                return Some((subtext.to_owned(), SpecialUnicodeChar::Nothing))
             }
         } else {
             return None
@@ -81,7 +56,8 @@ impl<'t> Iterator for SplitLines<'t> {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut result = self.cached.clone();
+        let mut result = String::new();
+        swap(&mut result, &mut self.cached);
 
         if result.len_without_modifiers() >= self.line_length-1 {
             self.cached = result.get(self.line_length-1..).unwrap().to_owned();
@@ -92,24 +68,24 @@ impl<'t> Iterator for SplitLines<'t> {
                 let new_len = {
                     result.len_without_modifiers()
                     + next_word.len_without_modifiers()
-                    + next_sep.map_or(0, |_| 1)
+                    + (next_sep.is_needed_end_of_line() as usize)
                 };
 
                 if new_len > self.line_length {
                     // Line full
                     self.cached = String::from(next_word);
-                    if let Some(c) = next_sep {
-                        self.cached.push(c)
-                    }
+                    next_sep.append_to(&mut self.cached);
 
+                    break
+                } else if next_sep.is_new_line() {
+                    // Line not full, but new line detected
+                    result.push_str(&next_word);
+                    next_sep.append_to(&mut result);
                     break
                 } else {
                     // Line still have space, continue
                     result.push_str(&next_word);
-
-                    if let Some(c) = next_sep {
-                        result.push(c)
-                    }
+                    next_sep.append_to(&mut result);
                 }
             } else {
                 break

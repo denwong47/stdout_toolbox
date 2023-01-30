@@ -1,34 +1,123 @@
-use duplicate::duplicate_item;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[duplicate_item(
-    __name__                __char__;
-    [ TAB ]                 [ '\u{0009}' ];
-    [ LINE_FEED ]           [ '\u{000A}' ];
-    [ CARRIAGE_RETURN ]     [ '\u{000D}' ];
-    [ SPACE ]               [ '\u{0020}' ];
-    [ NO_BREAK_SPACE ]      [ '\u{00A0}' ]; // DO NOT BREAK THIS
-    [ OGHAM_SPACE_MARK ]    [ '\u{1680}' ];
-    [ EN_QUAD ]             [ '\u{2000}' ];
-    [ EM_QUAD ]             [ '\u{2001}' ];
-    [ EN_SPACE ]            [ '\u{2002}' ];
-    [ EM_SPACE ]            [ '\u{2003}' ];
-    [ THREE_PER_EM_SPACE ]  [ '\u{2004}' ];
-    [ FOUR_PER_EM_SPACE ]   [ '\u{2005}' ];
-    [ SIX_PER_EM_SPACE ]    [ '\u{2006}' ];
-    [ FIGURE_SPACE ]        [ '\u{2007}' ]; // DO NOT BREAK THIS
-    [ PUNCTUATION_SPACE ]   [ '\u{2008}' ];
-    [ THIN_SPACE ]          [ '\u{2009}' ];
-    [ HAIR_SPACE ]          [ '\u{200A}' ];
-    [ LINE_SEPARATOR ]      [ '\u{2028}' ];
-    [ PARAGRAPH_SEPARATOR ] [ '\u{2029}' ];
-    [ NARROW_NO_BREAK_SPACE][ '\u{202F}' ];
-    [ MEDIUM_MATH_SPACE ]   [ '\u{205F}' ];
-    [ IDEOGRAPHIC_SPACE ]   [ '\u{3000}' ];
-    [ EN_DASH ]             [ '\u{2013}' ];
-    [ EM_DASH ]             [ '\u{2014}' ];
-    [ MINUS ]               [ '\u{2212}' ];
+#[derive(EnumIter, Debug, PartialEq)]
+pub enum SpecialUnicodeChar {
+    Tab,
+    LineFeed,
+    CarriageReturn,
+    SPACE,
+    NoBreakSpace,
+    OghamSpaceMark,
+    EnQuad,
+    EmQuad,
+    EnSpace,
+    EmSpace,
+    ThreePerEmSpace,
+    FourPerEmSpace,
+    SixPerEmSpace,
+    FigureSpace,
+    PunctuationSpace,
+    ThinSpace,
+    HairSpace,
+    LineSeparator,
+    ParagraphSeparator,
+    NarrowNoBreakSpace,
+    MediumMathSpace,
+    IdeographicSpace,
 
-    [ HYPHEN ]              [ '\u{002D}' ];
-)]
-#[allow(dead_code)]
-pub static __name__:char = __char__;
+    EnDash,
+    EmDash,
+    Minus,
+    Hyphen,
+
+    Nothing,
+}
+impl SpecialUnicodeChar {
+    pub fn char(&self) -> Option<char> {
+        match self {
+            Self::Nothing => None,
+
+            Self::Tab => Some('\u{0009}'),
+            Self::LineFeed => Some('\u{000A}'),
+            Self::CarriageReturn => Some('\u{000D}'),
+            Self::SPACE => Some('\u{0020}'),
+            Self::NoBreakSpace => Some('\u{00A0}'),
+            Self::OghamSpaceMark => Some('\u{1680}'),
+            Self::EnQuad => Some('\u{2000}'),
+            Self::EmQuad => Some('\u{2001}'),
+            Self::EnSpace => Some('\u{2002}'),
+            Self::EmSpace => Some('\u{2003}'),
+            Self::ThreePerEmSpace => Some('\u{2004}'),
+            Self::FourPerEmSpace => Some('\u{2005}'),
+            Self::SixPerEmSpace => Some('\u{2006}'),
+            Self::FigureSpace => Some('\u{2007}'),
+            Self::PunctuationSpace => Some('\u{2008}'),
+            Self::ThinSpace => Some('\u{2009}'),
+            Self::HairSpace => Some('\u{200A}'),
+            Self::LineSeparator => Some('\u{2028}'),
+            Self::ParagraphSeparator => Some('\u{2029}'),
+            Self::NarrowNoBreakSpace => Some('\u{202F}'),
+            Self::MediumMathSpace => Some('\u{205F}'),
+            Self::IdeographicSpace => Some('\u{3000}'),
+
+            Self::EnDash => Some('\u{2013}'),
+            Self::EmDash => Some('\u{2014}'),
+            Self::Minus => Some('\u{2212}'),
+            Self::Hyphen => Some('\u{002D}'),
+        }
+    }
+    
+    pub fn find_char(c: char) -> Option<Self> {
+        Self::iter().find(| m | m.char().as_ref() == Some(&c))
+    }
+
+    pub fn all_non_breaking_chars() -> String {
+        Self::iter()
+            .filter(| m | !m.is_breaking())
+            .fold(String::new(), | mut lhs, rhs | {
+                match rhs.char() {
+                    Some(c) => lhs.push(c),
+                    None => ()
+                }
+
+                lhs
+            })
+    }
+
+    pub fn is_breaking(&self) -> bool {
+        match self {
+            Self::NoBreakSpace
+            | Self::NarrowNoBreakSpace
+            | Self::FigureSpace
+            | Self::Nothing => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_new_line(&self) -> bool {
+        match self {
+            Self::CarriageReturn
+            | Self::LineFeed
+            | Self::LineSeparator => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_needed_end_of_line(&self) -> bool {
+        match self {
+            Self::EnDash
+            | Self::EmDash
+            | Self::Minus
+            | Self::Hyphen => true,
+            _ => false,
+        }
+    }
+
+    pub fn append_to(&self, s:&mut String) {
+        match self.char() {
+            Some(c) => s.push(c),
+            None => (),
+        }
+    }
+}
