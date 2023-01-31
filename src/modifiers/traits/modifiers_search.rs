@@ -2,8 +2,7 @@ use lazy_static::lazy_static;
 use regex::{Matches, Regex};
 
 lazy_static! {
-    static ref MODIFIER_PATTERN: Regex =
-        Regex::new(r#"\x1b\[(?:\d+[;:])*\d+[A-Za-z]"#).unwrap();
+    static ref MODIFIER_PATTERN: Regex = Regex::new(r#"\x1b\[(?:\d+[;:])*\d+[A-Za-z]"#).unwrap();
 }
 
 pub struct ModifiersInText<'r, 't>(Matches<'r, 't>);

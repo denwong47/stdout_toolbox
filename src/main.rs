@@ -25,7 +25,6 @@ fn main() {
     // let s = String::from("Hello, World!");
     // println!("{}", style1(&s));
 
-
     // =================================================================================
     // TEST PROGRESS BAR
 
@@ -52,9 +51,9 @@ fn main() {
     //     ForegroundColours::BrightCyan.resetter(),
     //     BackgroundColours::Blue.resetter(),
     // );
-    
+
     // println!("{:?}", s);
-    
+
     // let i = ForegroundColours::iter_member_in_str(&s);
     // i.for_each(
     //     | m | println!("Member found: {:?}", m)

@@ -4,7 +4,7 @@ use regex;
 use regex::Regex;
 use strum::IntoEnumIterator;
 
-/// Pair of traits: HasValue and HasResetter. 
+/// Pair of traits: HasValue and HasResetter.
 pub trait HasValue<T> {
     fn value(&self) -> T;
 }
@@ -21,38 +21,33 @@ where
     }
 }
 
-pub trait SearchValue<T> : IntoEnumIterator+HasValue<T> {
+pub trait SearchValue<T>: IntoEnumIterator + HasValue<T> {
     fn find_value(value: &T) -> Option<Self>;
 }
 impl<U, T> SearchValue<T> for U
 where
     T: PartialEq,
-    U: IntoEnumIterator+HasValue<T>
+    U: IntoEnumIterator + HasValue<T>,
 {
     // TODO If we do a proc_macro that map Enum members into values, we can also
     // implement a backward mechanism, rather than a sequential search.
     fn find_value(value: &T) -> Option<Self> {
-        Self
-        ::iter()
-        .find(
-            | m | m.value().eq(value)
-        )
+        Self::iter().find(|m| m.value().eq(value))
     }
 }
 
 // =====================================================================================
 
-pub struct ModifierIter<'t, T>
-{
+pub struct ModifierIter<'t, T> {
     text: &'t str,
     pos: usize,
     pattern: Regex,
 
     _enum_type: PhantomData<T>,
 }
-impl<'t, T> From<&'t str> for ModifierIter<'t, T> 
+impl<'t, T> From<&'t str> for ModifierIter<'t, T>
 where
-    T: SearchValue<String>
+    T: SearchValue<String>,
 {
     fn from(value: &'t str) -> Self {
         Self {
@@ -60,15 +55,16 @@ where
             pos: 0,
             pattern: Regex::new(
                 T::iter()
-                .fold(
-                    String::new(),
-                    | lhs, rhs | {
-                        let sep = match lhs.len() { 0=>"", _=>"|"};
+                    .fold(String::new(), |lhs, rhs| {
+                        let sep = match lhs.len() {
+                            0 => "",
+                            _ => "|",
+                        };
                         lhs + sep + &regex::escape(&rhs.value())
-                    }
-                )
-                .as_str()
-            ).unwrap(),
+                    })
+                    .as_str(),
+            )
+            .unwrap(),
 
             _enum_type: PhantomData,
         }
@@ -76,7 +72,7 @@ where
 }
 impl<'t, T> Iterator for ModifierIter<'t, T>
 where
-    T: SearchValue<String>
+    T: SearchValue<String>,
 {
     type Item = T;
 
@@ -96,14 +92,14 @@ where
 }
 
 /// Trait for enums that Iter with String values.
-/// 
+///
 /// This allows us to construct an Iterator that iterates through each modifier within
 /// a String.
-pub trait SearchValueInStr : SearchValue<String> {
+pub trait SearchValueInStr: SearchValue<String> {
     fn iter_member_in_str<'t>(text: &'t str) -> ModifierIter<'t, Self>;
 }
 impl<U> SearchValueInStr for U
-where 
+where
     U: SearchValue<String>,
     Self: SearchValue<String>,
 {

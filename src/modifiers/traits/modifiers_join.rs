@@ -1,8 +1,5 @@
 use super::super::ANSIModifiers;
-use super::{
-    HasResetter,
-    HasValue,
-};
+use super::{HasResetter, HasValue};
 
 pub trait Modifier {
     fn wraps<T>(&self, s: &T) -> String
