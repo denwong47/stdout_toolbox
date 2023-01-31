@@ -27,6 +27,14 @@ impl HasResetter for Intensity {
         Self::Normal
     }
 }
+impl Display for Intensity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", HasValue::<String>::value(self))
+    }
+}
+
+
+// =====================================================================================
 
 #[duplicate_item(
     __enum_name__;

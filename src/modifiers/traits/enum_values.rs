@@ -21,6 +21,15 @@ where
     }
 }
 
+// impl<'t, U> HasValue<&'t str> for U
+// where
+//     U: HasValue<String>,
+// {
+//     fn value(&self) -> &'t str {
+//         &HasValue::<String>::value(self)
+//     }
+// }
+
 pub trait SearchValue<T>: IntoEnumIterator + HasValue<T> {
     fn find_value(value: &T) -> Option<Self>;
 }

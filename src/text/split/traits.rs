@@ -1,8 +1,11 @@
-use crate::modifiers::LengthWithoutModifiers;
 use std::mem::swap;
+
+use duplicate::duplicate_item;
 
 use lazy_static::lazy_static;
 use regex::Regex;
+
+use crate::modifiers::*;
 
 use super::*;
 
@@ -60,6 +63,7 @@ impl<'t> Iterator for SplitLines<'t> {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
+        let mut iter_exhausted: bool = false;
         let mut result = String::new();
         swap(&mut result, &mut self.cached);
 
@@ -93,57 +97,85 @@ impl<'t> Iterator for SplitLines<'t> {
             //   because the next time `next` is called, we should just return "a".
             // - that's why we need to check blank lines here.
             drop(result.pop()); // We don't need the new line char itself.
-            return Some(result);
-        }
-
-        loop {
-            if let Some((next_word, next_sep)) = self.iter.next() {
-                let new_len = {
-                    result.len_without_modifiers()
-                        + next_word.len_without_modifiers()
-                        + (next_sep.is_needed_end_of_line() as usize)
-                };
-
-                if new_len > self.line_length {
-                    // Line full
-                    self.cached = String::from(next_word);
-                    next_sep.append_to(&mut self.cached);
-                    break;
-                } else if next_sep.is_new_line() {
-                    // Line not full, but new line detected
-                    result.push_str(&next_word);
-
-                    if next_sep.is_needed_end_of_line() {
+        } else {
+            loop {
+                if let Some((next_word, next_sep)) = self.iter.next() {
+                    let new_len = {
+                        result.len_without_modifiers()
+                            + next_word.len_without_modifiers()
+                            + (next_sep.is_needed_end_of_line() as usize)
+                    };
+    
+                    if new_len > self.line_length {
+                        // Line full
+                        self.cached = String::from(next_word);
+                        next_sep.append_to(&mut self.cached);
+                        break;
+                    } else if next_sep.is_new_line() {
+                        // Line not full, but new line detected
+                        result.push_str(&next_word);
+    
+                        if next_sep.is_needed_end_of_line() {
+                            next_sep.append_to(&mut result);
+                        }
+                        break;
+                    } else {
+                        // Line still have space, continue
+                        result.push_str(&next_word);
                         next_sep.append_to(&mut result);
                     }
-                    break;
                 } else {
-                    // Line still have space, continue
-                    result.push_str(&next_word);
-                    next_sep.append_to(&mut result);
+                    iter_exhausted = true;
+                    break;
                 }
-            } else {
-                break;
             }
         }
 
-        match result.len() {
-            0 => None,
-            _ => {
-                let last_char = result.pop().unwrap();
+        if result.len() > 0 || ! iter_exhausted {
+            
+            let last_char = result.pop().unwrap();
 
-                if let Some(m) = SpecialUnicodeChar::find_char(last_char) {
-                    if m.is_needed_end_of_line() {
-                        // If we need it, push it back
-                        result.push(last_char)
-                    }
-                } else {
-                    // If its not a special character, put it back
+            if let Some(m) = SpecialUnicodeChar::find_char(last_char) {
+                if m.is_needed_end_of_line() {
+                    // If we need it, push it back
                     result.push(last_char)
                 }
-
-                Some(result)
+            } else {
+                // If its not a special character, put it back
+                result.push(last_char)
             }
+
+            
+
+            // Check for the last modifiers, and if found, reset it, 
+            macro_rules! sub_members {
+                ($enum_name:ident) => {
+                    if let Some(last_mod) = $enum_name::iter_member_in_str(&result).last() {
+                        if last_mod != last_mod.resetter(){
+                            result.push_str(
+                                {
+                                    format!(
+                                        "{:width$}",
+                                        "",
+                                        width = self.line_length - result.len_without_modifiers()
+                                    )
+                                    + HasValue::<String>::value(&last_mod.resetter()).as_str()
+                                }.as_str()
+                            );
+                            self.cached = HasValue::<String>::value(&last_mod) + &self.cached;
+                        }
+                    }
+                };
+            }
+
+            sub_members!(ForegroundColours);
+            sub_members!(BackgroundColours);
+            sub_members!(Intensity);
+
+            Some(result)
+        
+        } else {
+            None
         }
     }
 }
