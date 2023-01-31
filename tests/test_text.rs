@@ -104,5 +104,45 @@ fn test_split_line() {
     ";
 
     text.iter_lines(60).for_each(|s| println!("{}", s));
-    // .for_each(|s| println!("{}", s));
+}
+
+#[duplicate_item(
+    [
+        __name__    [ test_modifier_iter_no_modifiers ]
+        __text__    [ "Hello I am just a plain text.".to_owned() ]
+        __expected__   [ [ 
+            ForegroundColours::R5G5B5, // This won't be used; zip will terminate
+        ] ]
+    ]
+    [
+        __name__    [ test_modifier_iter_mix_fore_back ]
+        __text__    [ format!(
+            "Hello I am {}Blue{} and {}{}BLUUUUUE{}{}.",
+            ForegroundColours::Blue,
+            ForegroundColours::Reset,
+            BackgroundColours::Blue,
+            ForegroundColours::BrightCyan,
+            ForegroundColours::BrightCyan.resetter(),
+            BackgroundColours::Blue.resetter(),
+        ) ]
+        __expected__   [ [
+            ForegroundColours::Blue,
+            ForegroundColours::Reset,
+            ForegroundColours::BrightCyan,
+            ForegroundColours::Reset,
+
+            ForegroundColours::R5G5B5, // This won't be used; zip will terminate
+        ] ]
+    ]
+)]
+#[test]
+fn __name__() {
+    let text = __text__;
+
+    let iter = ForegroundColours::iter_member_in_str(&text);
+
+    iter.zip(__expected__)
+    .for_each(
+        | (found, expected) | assert_eq!(found, expected)
+    )
 }
