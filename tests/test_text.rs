@@ -129,7 +129,11 @@ fn test_split_line() {
     );
 
     text.as_str().iter_lines(60).for_each(|s| {
-        println!("| {:width$} |", s, width=60+s.len()-s.len_without_modifiers())
+        println!(
+            "| {:width$} |",
+            s,
+            width = 60 + s.len() - s.len_without_modifiers()
+        )
     });
 }
 
@@ -137,7 +141,7 @@ fn test_split_line() {
     [
         __name__    [ test_modifier_iter_no_modifiers ]
         __text__    [ "Hello I am just a plain text.".to_owned() ]
-        __expected__   [ [ 
+        __expected__   [ [
             ForegroundColours::R5G5B5, // This won't be used; zip will terminate
         ] ]
     ]
@@ -169,7 +173,5 @@ fn __name__() {
     let iter = ForegroundColours::iter_member_in_str(&text);
 
     iter.zip(__expected__)
-    .for_each(
-        | (found, expected) | assert_eq!(found, expected)
-    )
+        .for_each(|(found, expected)| assert_eq!(found, expected))
 }

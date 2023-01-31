@@ -105,7 +105,7 @@ impl<'t> Iterator for SplitLines<'t> {
                             + next_word.len_without_modifiers()
                             + (next_sep.is_needed_end_of_line() as usize)
                     };
-    
+
                     if new_len > self.line_length {
                         // Line full
                         self.cached = String::from(next_word);
@@ -114,7 +114,7 @@ impl<'t> Iterator for SplitLines<'t> {
                     } else if next_sep.is_new_line() {
                         // Line not full, but new line detected
                         result.push_str(&next_word);
-    
+
                         if next_sep.is_needed_end_of_line() {
                             next_sep.append_to(&mut result);
                         }
@@ -131,8 +131,7 @@ impl<'t> Iterator for SplitLines<'t> {
             }
         }
 
-        if result.len() > 0 || ! iter_exhausted {
-            
+        if result.len() > 0 || !iter_exhausted {
             let last_char = result.pop().unwrap();
 
             if let Some(m) = SpecialUnicodeChar::find_char(last_char) {
@@ -145,22 +144,20 @@ impl<'t> Iterator for SplitLines<'t> {
                 result.push(last_char)
             }
 
-            
-
-            // Check for the last modifiers, and if found, reset it, 
+            // Check for the last modifiers, and if found, reset it,
             macro_rules! sub_members {
                 ($enum_name:ident) => {
                     if let Some(last_mod) = $enum_name::iter_member_in_str(&result).last() {
-                        if last_mod != last_mod.resetter(){
+                        if last_mod != last_mod.resetter() {
                             result.push_str(
                                 {
                                     format!(
                                         "{:width$}",
                                         "",
                                         width = self.line_length - result.len_without_modifiers()
-                                    )
-                                    + HasValue::<String>::value(&last_mod.resetter()).as_str()
-                                }.as_str()
+                                    ) + HasValue::<String>::value(&last_mod.resetter()).as_str()
+                                }
+                                .as_str(),
                             );
                             self.cached = HasValue::<String>::value(&last_mod) + &self.cached;
                         }
@@ -173,7 +170,6 @@ impl<'t> Iterator for SplitLines<'t> {
             sub_members!(Intensity);
 
             Some(result)
-        
         } else {
             None
         }
