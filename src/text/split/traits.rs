@@ -1,4 +1,4 @@
-use crate::modifiers::{ForegroundColours, LengthWithoutModifiers, Modifier};
+use crate::modifiers::LengthWithoutModifiers;
 use std::mem::swap;
 
 use lazy_static::lazy_static;

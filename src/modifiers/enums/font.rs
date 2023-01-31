@@ -1,7 +1,11 @@
+use std::fmt::Display;
+use strum_macros::EnumIter;
+
 use super::super::{HasResetter, HasValue};
 use duplicate::duplicate_item;
 
 #[allow(dead_code)]
+#[derive(EnumIter, Debug, PartialEq)]
 pub enum Intensity {
     Normal,
     Bold,
@@ -29,6 +33,7 @@ impl HasResetter for Intensity {
     [ ForegroundColours ];
     [ BackgroundColours ];
 )]
+#[derive(EnumIter, Debug, PartialEq)]
 #[allow(dead_code)]
 pub enum __enum_name__ {
     Black,
@@ -290,10 +295,11 @@ pub enum __enum_name__ {
 
     Reset,
 }
+
 #[duplicate_item(
-    __enum_name__;
-    [ ForegroundColours ];
-    [ BackgroundColours ];
+    __enum_name__           __apply__           __reset__;
+    [ ForegroundColours ]   [ "\x1b[38:5:{}m" ] [ "\x1b[39m" ];
+    [ BackgroundColours ]   [ "\x1b[48:5:{}m" ] [ "\x1b[49m" ];
 )]
 #[allow(dead_code)]
 impl __enum_name__ {
@@ -610,5 +616,15 @@ impl HasValue<String> for __enum_name__ {
 impl HasResetter for __enum_name__ {
     fn resetter(&self) -> Self {
         Self::Reset
+    }
+}
+#[duplicate_item(
+    __enum_name__;
+    [ ForegroundColours ];
+    [ BackgroundColours ];
+)]
+impl Display for __enum_name__ {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value())
     }
 }

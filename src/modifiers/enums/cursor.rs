@@ -1,6 +1,10 @@
+use std::fmt::Display;
+use strum_macros::EnumIter;
+
 use super::super::{HasResetter, HasValue};
 
 #[allow(dead_code)]
+#[derive(EnumIter, Debug, PartialEq)]
 pub enum MoveCursor {
     Up(i16),
     Down(i16),
@@ -42,5 +46,10 @@ impl HasResetter for MoveCursor {
             Self::Origin => Self::Origin,
             Self::Absolute(_, _) => Self::Origin,
         }
+    }
+}
+impl Display for MoveCursor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value())
     }
 }
