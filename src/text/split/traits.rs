@@ -1,3 +1,19 @@
+/// NEED TO REWRITE THIS ENTIRELY
+///
+/// Probably have an enum along the lines of
+/// 
+/// pub enum WordToken {
+///     Text(String),
+///     Modifier(Box<ANSIModifier>),
+///     ConnectingChar(char),
+///     EOF,
+/// }
+/// 
+/// and iter over that rather than (word, sep).
+/// 
+/// Enums should implement a From and Into their .value() type, so find_value()
+/// doesn't need to iterate.
+
 use std::mem::swap;
 
 use lazy_static::lazy_static;
