@@ -128,13 +128,15 @@ fn test_split_line() {
         BackgroundColours::Magenta.resetter(),
     );
 
-    text.as_str().iter_lines(60).for_each(|s| {
-        println!(
-            "| {:width$} |",
-            s,
-            width = 60 + s.len() - s.len_without_modifiers()
-        )
-    });
+    for line_len in (20..60).step_by(5) {
+        text.as_str().iter_lines(line_len).for_each(|s| {
+            println!(
+                "| {:width$} |",
+                s,
+                width = line_len + s.len() - s.len_without_modifiers()
+            )
+        });
+    }
 }
 
 #[duplicate_item(

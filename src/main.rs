@@ -6,8 +6,6 @@ mod progress;
 use progress::*;
 
 mod text;
-use stdout_toolbox::ModifierIter;
-use text::*;
 
 use std::{thread, time};
 

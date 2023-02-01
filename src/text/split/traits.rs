@@ -1,7 +1,5 @@
 use std::mem::swap;
 
-use duplicate::duplicate_item;
-
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -68,9 +66,15 @@ impl<'t> Iterator for SplitLines<'t> {
         swap(&mut result, &mut self.cached);
 
         if result.len_without_modifiers() >= self.line_length - 1 {
-            self.cached = result.get(self.line_length - 1..).unwrap_or("").to_owned();
+            // Bug - result.get below uses len WITH modifiers
+            let range_wrapper = RangeWithoutModifiers::new(&result);
+            let idx_with_modifiers = range_wrapper.index_with_modifiers(self.line_length - 1);
 
-            result = result.get(..self.line_length - 1).unwrap().to_owned();
+            self.cached = result.get(
+                idx_with_modifiers..
+            ).unwrap_or("").to_owned();
+
+            result = result.get(..idx_with_modifiers).unwrap().to_owned();
             if result
                 .chars()
                 .last()
@@ -79,8 +83,6 @@ impl<'t> Iterator for SplitLines<'t> {
             {
                 result += "-";
             }
-
-            return Some(result);
         }
 
         let last_char = {
@@ -132,42 +134,42 @@ impl<'t> Iterator for SplitLines<'t> {
         }
 
         if result.len() > 0 || !iter_exhausted {
-            let last_char = result.pop().unwrap();
-
-            if let Some(m) = SpecialUnicodeChar::find_char(last_char) {
-                if m.is_needed_end_of_line() {
-                    // If we need it, push it back
+            if let Some(last_char) = result.pop() {
+                if let Some(m) = SpecialUnicodeChar::find_char(last_char) {
+                    if m.is_needed_end_of_line() {
+                        // If we need it, push it back
+                        result.push(last_char)
+                    }
+                } else {
+                    // If its not a special character, put it back
                     result.push(last_char)
                 }
-            } else {
-                // If its not a special character, put it back
-                result.push(last_char)
-            }
-
-            // Check for the last modifiers, and if found, reset it,
-            macro_rules! sub_members {
-                ($enum_name:ident) => {
-                    if let Some(last_mod) = $enum_name::iter_member_in_str(&result).last() {
-                        if last_mod != last_mod.resetter() {
-                            result.push_str(
-                                {
-                                    format!(
-                                        "{:width$}",
-                                        "",
-                                        width = self.line_length - result.len_without_modifiers()
-                                    ) + HasValue::<String>::value(&last_mod.resetter()).as_str()
-                                }
-                                .as_str(),
-                            );
-                            self.cached = HasValue::<String>::value(&last_mod) + &self.cached;
+    
+                // Check for the last modifiers, and if found, reset it,
+                macro_rules! sub_members {
+                    ($enum_name:ident) => {
+                        if let Some(last_mod) = $enum_name::iter_member_in_str(&result).last() {
+                            if last_mod != last_mod.resetter() {
+                                result.push_str(
+                                    {
+                                        format!(
+                                            "{:width$}",
+                                            "",
+                                            width = self.line_length - result.len_without_modifiers()
+                                        ) + HasValue::<String>::value(&last_mod.resetter()).as_str()
+                                    }
+                                    .as_str(),
+                                );
+                                self.cached = HasValue::<String>::value(&last_mod) + &self.cached;
+                            }
                         }
-                    }
-                };
+                    };
+                }
+    
+                sub_members!(ForegroundColours);
+                sub_members!(BackgroundColours);
+                sub_members!(Intensity);
             }
-
-            sub_members!(ForegroundColours);
-            sub_members!(BackgroundColours);
-            sub_members!(Intensity);
 
             Some(result)
         } else {
