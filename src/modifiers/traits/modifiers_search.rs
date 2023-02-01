@@ -1,5 +1,5 @@
-use std::ops::Range;
 use std::cmp::{max, min};
+use std::ops::Range;
 
 use lazy_static::lazy_static;
 use regex::{Match, Matches, Regex};
@@ -27,7 +27,6 @@ impl<'r, 't> Iterator for ModifiersInText<'r, 't> {
         self.0.next().map(|m| m.as_str())
     }
 }
-
 
 pub trait FindModifiers {
     fn iter_modifier_strs(&self) -> ModifiersInText;
@@ -89,51 +88,41 @@ impl<'t> RangeWithoutModifiers<'t> {
                 }
 
                 v
-            }
+            },
         }
     }
 
     pub fn index_without_modifiers(&self, idx: usize) -> usize {
         self.modifier_ranges
-        .iter()
-        .map(
-            | (start, end) | {
+            .iter()
+            .map(|(start, end)| {
                 if *start >= idx {
                     0
                 } else {
-                    min(idx,*end) - start
+                    min(idx, *end) - start
                 }
-            }
-        )
-        .fold(
-            idx,
-            | lhs, rhs | lhs - rhs
-        )
+            })
+            .fold(idx, |lhs, rhs| lhs - rhs)
     }
 
-    pub fn index_with_modifiers(&self, idx:usize) -> usize {
+    pub fn index_with_modifiers(&self, idx: usize) -> usize {
         self.modifier_ranges
-        .iter()
-        .map(
-            | (start, end) | {
+            .iter()
+            .map(|(start, end)| {
                 if *start >= idx {
                     0
                 } else {
-                    min(idx,*end) - start
+                    min(idx, *end) - start
                 }
-            }
-        )
-        .fold(
-            idx,
-            | lhs, rhs | lhs + rhs
-        )
+            })
+            .fold(idx, |lhs, rhs| lhs + rhs)
     }
 
-    pub fn range_without_modifiers(&self, range:Range<usize>) -> Range<usize> {
+    pub fn range_without_modifiers(&self, range: Range<usize>) -> Range<usize> {
         self.index_without_modifiers(range.start)..self.index_without_modifiers(range.end)
     }
 
-    pub fn range_with_modifiers(&self, range:Range<usize>) -> Range<usize> {
+    pub fn range_with_modifiers(&self, range: Range<usize>) -> Range<usize> {
         self.index_with_modifiers(range.start)..self.index_with_modifiers(range.end)
     }
 }

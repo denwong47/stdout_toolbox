@@ -70,9 +70,7 @@ impl<'t> Iterator for SplitLines<'t> {
             let range_wrapper = RangeWithoutModifiers::new(&result);
             let idx_with_modifiers = range_wrapper.index_with_modifiers(self.line_length - 1);
 
-            self.cached = result.get(
-                idx_with_modifiers..
-            ).unwrap_or("").to_owned();
+            self.cached = result.get(idx_with_modifiers..).unwrap_or("").to_owned();
 
             result = result.get(..idx_with_modifiers).unwrap().to_owned();
             if result
@@ -144,7 +142,7 @@ impl<'t> Iterator for SplitLines<'t> {
                     // If its not a special character, put it back
                     result.push(last_char)
                 }
-    
+
                 // Check for the last modifiers, and if found, reset it,
                 macro_rules! sub_members {
                     ($enum_name:ident) => {
@@ -155,7 +153,8 @@ impl<'t> Iterator for SplitLines<'t> {
                                         format!(
                                             "{:width$}",
                                             "",
-                                            width = self.line_length - result.len_without_modifiers()
+                                            width =
+                                                self.line_length - result.len_without_modifiers()
                                         ) + HasValue::<String>::value(&last_mod.resetter()).as_str()
                                     }
                                     .as_str(),
@@ -165,7 +164,7 @@ impl<'t> Iterator for SplitLines<'t> {
                         }
                     };
                 }
-    
+
                 sub_members!(ForegroundColours);
                 sub_members!(BackgroundColours);
                 sub_members!(Intensity);
