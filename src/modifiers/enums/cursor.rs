@@ -1,6 +1,10 @@
-use super::super::{HasValue, HasResetter};
+use std::fmt::Display;
+use strum_macros::EnumIter;
+
+use super::super::{HasResetter, HasValue};
 
 #[allow(dead_code)]
+#[derive(EnumIter, Debug, PartialEq)]
 pub enum MoveCursor {
     Up(i16),
     Down(i16),
@@ -12,20 +16,23 @@ pub enum MoveCursor {
 #[allow(dead_code)]
 impl HasValue<String> for MoveCursor {
     fn value(&self) -> String {
-        let (command_char, magnitude) = match self {
-            Self::Up(magnitude) => ("A", magnitude.to_string()),
-            Self::Down(magnitude) => ("B", magnitude.to_string()),
-            Self::Right(magnitude) => ("C", magnitude.to_string()),
-            Self::Left(magnitude) => ("D", magnitude.to_string()),
-            Self::Origin => ("H", String::new()),
-            Self::Absolute(x, y) => ("H", format!("{};{}", y, x)),
-        };
+        match self {
+            // By default, shell treat commands with 0 magnitude as 1.
+            // There are many reasons why 0 would mean actual 0, so we give an empty string instead.
+            Self::Up(0) | Self::Down(0) | Self::Left(0) | Self::Right(0) => String::new(),
+            _ => {
+                let (command_char, magnitude) = match self {
+                    Self::Up(magnitude) => ("A", magnitude.to_string()),
+                    Self::Down(magnitude) => ("B", magnitude.to_string()),
+                    Self::Right(magnitude) => ("C", magnitude.to_string()),
+                    Self::Left(magnitude) => ("D", magnitude.to_string()),
+                    Self::Origin => ("H", String::new()),
+                    Self::Absolute(x, y) => ("H", format!("{};{}", y, x)),
+                };
 
-        format!(
-            "\x1b[{}{}",
-            magnitude,
-            command_char,
-        )
+                format!("\x1b[{}{}", magnitude, command_char,)
+            }
+        }
     }
 }
 #[allow(dead_code)]
@@ -39,5 +46,10 @@ impl HasResetter for MoveCursor {
             Self::Origin => Self::Origin,
             Self::Absolute(_, _) => Self::Origin,
         }
+    }
+}
+impl Display for MoveCursor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value())
     }
 }
