@@ -1,75 +1,101 @@
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-#[derive(EnumIter, Debug, PartialEq)]
+use enum_values::*;
+
+type OptionalChar = Option<char>;
+
+#[derive(ValuedEnum, EnumIter, Debug, PartialEq)]
+#[value_type(OptionalChar)]
 pub enum SpecialUnicodeChar {
+    #[value(None)]
+    Nothing,
+
+    #[value(Some('\u{0009}'))]
     Tab,
+
+    #[value(Some('\u{000A}'))]
     LineFeed,
+
+    #[value(Some('\u{000D}'))]
     CarriageReturn,
+
+    #[value(Some('\u{0020}'))]
     Space,
+
+    #[value(Some('\u{00A0}'))]
     NoBreakSpace,
+
+    #[value(Some('\u{1680}'))]
     OghamSpaceMark,
+
+    #[value(Some('\u{2000}'))]
     EnQuad,
+
+    #[value(Some('\u{2001}'))]
     EmQuad,
+
+    #[value(Some('\u{2002}'))]
     EnSpace,
+
+    #[value(Some('\u{2003}'))]
     EmSpace,
+
+    #[value(Some('\u{2004}'))]
     ThreePerEmSpace,
+
+    #[value(Some('\u{2005}'))]
     FourPerEmSpace,
+
+    #[value(Some('\u{2006}'))]
     SixPerEmSpace,
+
+    #[value(Some('\u{2007}'))]
     FigureSpace,
+
+    #[value(Some('\u{2008}'))]
     PunctuationSpace,
+
+    #[value(Some('\u{2009}'))]
     ThinSpace,
+
+    #[value(Some('\u{200A}'))]
     HairSpace,
+
+    #[value(Some('\u{2028}'))]
     LineSeparator,
+
+    #[value(Some('\u{2029}'))]
     ParagraphSeparator,
+
+    #[value(Some('\u{202F}'))]
     NarrowNoBreakSpace,
+
+    #[value(Some('\u{205F}'))]
     MediumMathSpace,
+
+    #[value(Some('\u{3000}'))]
     IdeographicSpace,
 
+    #[value(Some('\u{2013}'))]
     EnDash,
-    EmDash,
-    Minus,
-    Hyphen,
 
-    Nothing,
+    #[value(Some('\u{2014}'))]
+    EmDash,
+
+    #[value(Some('\u{2212}'))]
+    Minus,
+
+    #[value(Some('\u{002D}'))]
+    Hyphen,
 }
 impl SpecialUnicodeChar {
     pub fn char(&self) -> Option<char> {
-        match self {
-            Self::Nothing => None,
-
-            Self::Tab => Some('\u{0009}'),
-            Self::LineFeed => Some('\u{000A}'),
-            Self::CarriageReturn => Some('\u{000D}'),
-            Self::Space => Some('\u{0020}'),
-            Self::NoBreakSpace => Some('\u{00A0}'),
-            Self::OghamSpaceMark => Some('\u{1680}'),
-            Self::EnQuad => Some('\u{2000}'),
-            Self::EmQuad => Some('\u{2001}'),
-            Self::EnSpace => Some('\u{2002}'),
-            Self::EmSpace => Some('\u{2003}'),
-            Self::ThreePerEmSpace => Some('\u{2004}'),
-            Self::FourPerEmSpace => Some('\u{2005}'),
-            Self::SixPerEmSpace => Some('\u{2006}'),
-            Self::FigureSpace => Some('\u{2007}'),
-            Self::PunctuationSpace => Some('\u{2008}'),
-            Self::ThinSpace => Some('\u{2009}'),
-            Self::HairSpace => Some('\u{200A}'),
-            Self::LineSeparator => Some('\u{2028}'),
-            Self::ParagraphSeparator => Some('\u{2029}'),
-            Self::NarrowNoBreakSpace => Some('\u{202F}'),
-            Self::MediumMathSpace => Some('\u{205F}'),
-            Self::IdeographicSpace => Some('\u{3000}'),
-
-            Self::EnDash => Some('\u{2013}'),
-            Self::EmDash => Some('\u{2014}'),
-            Self::Minus => Some('\u{2212}'),
-            Self::Hyphen => Some('\u{002D}'),
-        }
+        self.value()
     }
 
     pub fn find_char(c: char) -> Option<Self> {
-        Self::iter().find(|m| m.char().as_ref() == Some(&c))
+        Self::from_value(&Some(c))
     }
 
     pub fn all_non_breaking_chars() -> String {

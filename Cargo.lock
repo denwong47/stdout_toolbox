@@ -22,10 +22,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "enum_values"
+version = "0.1.0"
+source = "git+https://github.com/denwong47/enum_values?branch=development#f7b9ee8aa5d9ca4cad5606a1ecf3ff3b7e9b2aef"
+dependencies = [
+ "enum_values_macros",
+ "enum_values_traits",
+]
+
+[[package]]
+name = "enum_values_macros"
+version = "0.1.0"
+source = "git+https://github.com/denwong47/enum_values?branch=development#f7b9ee8aa5d9ca4cad5606a1ecf3ff3b7e9b2aef"
+dependencies = [
+ "enum_values_traits",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "enum_values_traits"
+version = "0.1.0"
+source = "git+https://github.com/denwong47/enum_values?branch=development#f7b9ee8aa5d9ca4cad5606a1ecf3ff3b7e9b2aef"
+dependencies = [
+ "syn",
+ "thiserror",
+]
+
+[[package]]
 name = "heck"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
+checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "lazy_static"
@@ -109,6 +137,7 @@ name = "stdout_toolbox"
 version = "0.1.0"
 dependencies = [
  "duplicate",
+ "enum_values",
  "lazy_static",
  "regex",
  "strum",
@@ -146,6 +175,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.38"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a9cd18aa97d5c45c6603caea1da6628790b37f7a34b6ca89522331c5180fed0"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.38"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fb327af4685e4d03fa8cbcf1716380da910eeb2bb8be417e7f9fd3fb164f36f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
