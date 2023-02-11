@@ -22,28 +22,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "enum_values"
+name = "enum_index"
 version = "0.1.0"
-source = "git+https://github.com/denwong47/enum_values?branch=development#f7b9ee8aa5d9ca4cad5606a1ecf3ff3b7e9b2aef"
+source = "git+https://github.com/denwong47/enum_index?branch=development#66cb7c8f8f05c6ae81c95bd16144c1b9d75fe4c4"
 dependencies = [
- "enum_values_macros",
- "enum_values_traits",
+ "enum_index_macros",
+ "enum_index_types",
 ]
 
 [[package]]
-name = "enum_values_macros"
+name = "enum_index_macros"
 version = "0.1.0"
-source = "git+https://github.com/denwong47/enum_values?branch=development#f7b9ee8aa5d9ca4cad5606a1ecf3ff3b7e9b2aef"
+source = "git+https://github.com/denwong47/enum_index?branch=development#66cb7c8f8f05c6ae81c95bd16144c1b9d75fe4c4"
 dependencies = [
- "enum_values_traits",
+ "enum_index_types",
  "quote",
  "syn",
 ]
 
 [[package]]
-name = "enum_values_traits"
+name = "enum_index_types"
 version = "0.1.0"
-source = "git+https://github.com/denwong47/enum_values?branch=development#f7b9ee8aa5d9ca4cad5606a1ecf3ff3b7e9b2aef"
+source = "git+https://github.com/denwong47/enum_index?branch=development#66cb7c8f8f05c6ae81c95bd16144c1b9d75fe4c4"
 dependencies = [
  "syn",
  "thiserror",
@@ -137,7 +137,7 @@ name = "stdout_toolbox"
 version = "0.1.0"
 dependencies = [
  "duplicate",
- "enum_values",
+ "enum_index",
  "lazy_static",
  "regex",
  "strum",

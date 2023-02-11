@@ -17,6 +17,6 @@ path = "src/lib.rs"
 duplicate = "0"
 lazy_static = "1"
 regex = "1"
-enum_values = { git = "https://github.com/denwong47/enum_values", branch = "development" }
+enum_index = { git = "https://github.com/denwong47/enum_index", branch = "development" }
 strum = { version = "0", features = ["derive"] }
 strum_macros = { version = "0" }

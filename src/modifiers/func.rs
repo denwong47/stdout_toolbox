@@ -1,4 +1,4 @@
-use super::{BackgroundColours, ForegroundColours, Intensity, Modifier};
+use super::{BackgroundColours, ForegroundColours, Intensity, Wrapper};
 
 /// Produce a colouring factory of the particular style.
 #[allow(dead_code)]

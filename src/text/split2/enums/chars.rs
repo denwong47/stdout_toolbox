@@ -7,9 +7,15 @@ type OptionalChar = Option<char>;
 
 #[derive(EnumIndex, EnumIter, Debug, PartialEq)]
 #[index_type(OptionalChar)]
-pub enum SpecialUnicodeChar {
+pub enum TokenSeparator {
     #[index(None)]
     Nothing,
+
+    #[index(Some('\0'))]
+    Null,
+
+    #[index(Some('\u{0005}'))]
+    Eof,
 
     #[index(Some('\u{0009}'))]
     Tab,
@@ -89,55 +95,13 @@ pub enum SpecialUnicodeChar {
     #[index(Some('\u{002D}'))]
     Hyphen,
 }
-impl SpecialUnicodeChar {
-    pub fn char(&self) -> Option<char> {
-        self.index()
-    }
-
-    pub fn find_char(c: char) -> Option<Self> {
-        Self::from_index(&Some(c))
-    }
-
-    pub fn all_non_breaking_chars() -> String {
-        Self::iter()
-            .filter(|m| !m.is_breaking())
-            .fold(String::new(), |mut lhs, rhs| {
-                match rhs.char() {
-                    Some(c) => lhs.push(c),
-                    None => (),
-                }
-
-                lhs
-            })
-    }
-
-    pub fn is_breaking(&self) -> bool {
-        match self {
-            Self::NoBreakSpace | Self::NarrowNoBreakSpace | Self::FigureSpace | Self::Nothing => {
-                true
-            }
-            _ => false,
-        }
-    }
-
-    pub fn is_new_line(&self) -> bool {
-        match self {
-            Self::CarriageReturn | Self::LineFeed | Self::LineSeparator => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_needed_end_of_line(&self) -> bool {
-        match self {
-            Self::EnDash | Self::EmDash | Self::Minus | Self::Hyphen => true,
-            _ => false,
-        }
-    }
-
-    pub fn append_to(&self, s: &mut String) {
-        match self.char() {
-            Some(c) => s.push(c),
-            None => (),
+/// Allow all variants to
+impl ToString for TokenSeparator {
+    fn to_string(&self) -> String {
+        if let Some(c) = self.index() {
+            c.to_string()
+        } else {
+            String::new()
         }
     }
 }

@@ -1,7 +1,10 @@
 use super::super::ANSIModifiers;
 use super::{HasResetter, HasValue};
 
-pub trait Modifier {
+pub trait Modifier: HasValue<String> + HasResetter + Sized {}
+impl<U> Modifier for U where U: HasValue<String> + HasResetter + Sized {}
+
+pub trait Wrapper {
     fn wraps<T>(&self, s: &T) -> String
     where
         T: ToString;
@@ -14,9 +17,9 @@ pub trait JointModifier {
         T: HasValue<String> + HasResetter;
 }
 
-impl<U> Modifier for U
+impl<U> Wrapper for U
 where
-    U: HasValue<String> + HasResetter + Sized,
+    U: Modifier,
 {
     fn wraps<T>(&self, s: &T) -> String
     where
