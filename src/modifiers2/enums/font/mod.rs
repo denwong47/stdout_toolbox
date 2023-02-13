@@ -17,7 +17,7 @@ macro_rules! color_builder {
         $reset_idx:literal
     ) => {
         /// An Enum for ANSI 256-colour codes.
-        #[derive(Debug, EnumIter, EnumIndex)]
+        #[derive(Debug, EnumIter, EnumIndex, PartialEq)]
         #[index_type(OptionU8)]
         pub enum $enum_name {
             #[index(Some(0))]
@@ -864,16 +864,16 @@ macro_rules! color_builder {
             }
         }
 
-        impl<'t> TryFrom<Captures<'t>> for $enum_name {
+        impl<'t> TryFrom<&Captures<'t>> for $enum_name {
             type Error = ModifierError;
 
-            fn try_from(value: Captures<'t>) -> Result<Self, Self::Error> {
+            fn try_from(value: &Captures<'t>) -> Result<Self, Self::Error> {
                 // Get the codes from the Captures group, and check if its what we expects.
                 // e.g. `\x1b[38:5:122]m`:
                 // - `codes` = `vec![38, 5, 122]`
                 // - `end_char` = `'m'`
                 let _end_char: char = value
-                    .name("codes")
+                    .name("end_char")
                     .ok_or(ModifierError::BadCapturesGroup(
                         stringify!($enum_name).to_string(),
                     ))
@@ -881,7 +881,7 @@ macro_rules! color_builder {
                         match ch.as_str() {
                             // Assert that its 'm'
                             "m" => Ok('m'),
-                            c => Err(ModifierError::ValueNotRecognised(
+                            c => Err(ModifierError::UnexpectedEndCharacter(
                                 stringify!($enum_name).to_string(),
                                 c.to_string(),
                             )),
@@ -912,13 +912,13 @@ macro_rules! color_builder {
                         1 => match codes[0] {
                             $reset_idx => Ok(codes),
                             u => Err(ModifierError::MismatchedANSICode(
-                                u,
                                 stringify!($enum_name).to_string(),
-                                $reset_idx,
+                                u,
+                                $apply_idx,
                             )),
                         },
                         3 => {
-                            if codes[0] == $reset_idx && codes[1] == 5 {
+                            if codes[0] == $apply_idx && codes[1] == 5 {
                                 Ok(codes)
                             } else {
                                 Err(ModifierError::ValueNotRecognised(

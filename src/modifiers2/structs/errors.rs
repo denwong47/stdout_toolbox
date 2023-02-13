@@ -7,7 +7,7 @@ pub enum ModifierError {
     ValueIsNotAModifier(String),
 
     #[error("{1:?} is not the correct ANSI code for {0}; {2} expected.")]
-    MismatchedANSICode(u8, String, u8),
+    MismatchedANSICode(String, u8, u8),
 
     #[error("{1:?} is not a recognised pattern for {0}.")]
     ValueNotRecognised(String, String),
