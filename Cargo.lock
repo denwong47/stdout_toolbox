@@ -142,6 +142,7 @@ dependencies = [
  "regex",
  "strum",
  "strum_macros",
+ "thiserror",
 ]
 
 [[package]]

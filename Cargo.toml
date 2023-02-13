@@ -3,6 +3,9 @@ name = "stdout_toolbox"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = []
+
 [[bin]]
 name = "stdout_toolbox"
 path = "src/main.rs"
@@ -20,3 +23,4 @@ regex = "1"
 enum_index = { git = "https://github.com/denwong47/enum_index", branch = "development" }
 strum = { version = "0", features = ["derive"] }
 strum_macros = { version = "0" }
+thiserror = { version = "1" }
