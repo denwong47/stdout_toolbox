@@ -1,10 +1,8 @@
-use std::cmp::{max, min};
+use std::cmp::min;
 use std::ops::Range;
 
 use lazy_static::lazy_static;
 use regex::{Match, Matches, Regex};
-
-use crate::text;
 
 lazy_static! {
     static ref MODIFIER_PATTERN: Regex = Regex::new(r#"\x1b\[(?:\d+[;:])*\d+[A-Za-z]"#).unwrap();
@@ -68,6 +66,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub struct RangeWithoutModifiers<'t> {
     text: &'t str,
     modifier_ranges: Vec<(usize, usize)>,
@@ -92,6 +91,7 @@ impl<'t> RangeWithoutModifiers<'t> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn index_without_modifiers(&self, idx: usize) -> usize {
         self.modifier_ranges
             .iter()
@@ -118,10 +118,12 @@ impl<'t> RangeWithoutModifiers<'t> {
             .fold(idx, |lhs, rhs| lhs + rhs)
     }
 
+    #[allow(dead_code)]
     pub fn range_without_modifiers(&self, range: Range<usize>) -> Range<usize> {
         self.index_without_modifiers(range.start)..self.index_without_modifiers(range.end)
     }
 
+    #[allow(dead_code)]
     pub fn range_with_modifiers(&self, range: Range<usize>) -> Range<usize> {
         self.index_with_modifiers(range.start)..self.index_with_modifiers(range.end)
     }

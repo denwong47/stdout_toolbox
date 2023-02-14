@@ -1,8 +1,7 @@
-use std::ops::Index;
-
 use super::chars::TokenSeparator;
 use crate::modifiers::*;
 
+#[allow(dead_code)]
 pub enum StringToken {
     Word(String),
     Separator(TokenSeparator),

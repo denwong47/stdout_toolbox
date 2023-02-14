@@ -2,11 +2,9 @@ use super::super::traits::Resetter;
 use std::default;
 use strum_macros::EnumIter;
 
-use regex::{Captures, Regex};
-
 use enum_index::*;
 
-use super::super::structs::{ANSIEscapeCode, IntoANSIEscapeCode, ModifierError};
+use super::super::{ANSIEscapeCode, IntoANSIEscapeCode, ModifierError};
 
 type OptionU8 = Option<u8>;
 
@@ -830,11 +828,11 @@ macro_rules! color_builder {
                 self.index()
                     .map(|colour_idx| {
                         // Colour index
-                        ANSIEscapeCode::new($apply_idx, Some(vec![colour_idx as i32]))
+                        ANSIEscapeCode::new($apply_idx, Some(vec![colour_idx as i32]), 'm')
                     })
                     .unwrap_or(
                         // Reset
-                        ANSIEscapeCode::new($reset_idx, None),
+                        ANSIEscapeCode::new($reset_idx, None, 'm'),
                     )
             }
         }
@@ -864,85 +862,69 @@ macro_rules! color_builder {
             }
         }
 
-        impl<'t> TryFrom<&Captures<'t>> for $enum_name {
+        impl TryFrom<ANSIEscapeCode> for $enum_name {
             type Error = ModifierError;
 
-            fn try_from(value: &Captures<'t>) -> Result<Self, Self::Error> {
-                // Get the codes from the Captures group, and check if its what we expects.
-                // e.g. `\x1b[38:5:122]m`:
-                // - `codes` = `vec![38, 5, 122]`
-                // - `end_char` = `'m'`
-                let _end_char: char = value
-                    .name("end_char")
-                    .ok_or(ModifierError::BadCapturesGroup(
+            fn try_from(value: ANSIEscapeCode) -> Result<Self, Self::Error> {
+                // Refactor TryFrom<&Captures<'t>> to use this instead
+                if value.end_char != 'm' {
+                    return Err(ModifierError::UnexpectedEndCharacter(
                         stringify!($enum_name).to_string(),
-                    ))
-                    .and_then(|ch| {
-                        match ch.as_str() {
-                            // Assert that its 'm'
-                            "m" => Ok('m'),
-                            c => Err(ModifierError::UnexpectedEndCharacter(
-                                stringify!($enum_name).to_string(),
-                                c.to_string(),
-                            )),
-                        }
-                    })?;
+                        value.end_char.to_string(),
+                    ));
+                }
 
-                let codes: Vec<u8> = value
-                    .name("codes")
-                    .as_ref()
-                    .ok_or(
-                        // The Capture group is not from the correct pattern
-                        ModifierError::BadCapturesGroup(stringify!($enum_name).to_string()),
-                    )
-                    .and_then(|text| {
-                        Result::from_iter(Regex::new(r"[:;]").unwrap().split(text.as_str()).map(
-                            |code| {
-                                code.parse::<u8>().or(
-                                    // At least one of the code is not u8 parsable
-                                    Err(ModifierError::ValueNotRecognised(
-                                        stringify!($enum_name).to_string(),
-                                        code.to_string(),
-                                    )),
-                                )
-                            },
-                        ))
-                    })
-                    .and_then(|codes: Vec<u8>| match codes.len() {
-                        1 => match codes[0] {
-                            $reset_idx => Ok(codes),
-                            u => Err(ModifierError::MismatchedANSICode(
+                match (value.code, value.modifiers.len()) {
+                    ($reset_idx, 0) => Ok(Self::Reset),
+                    ($apply_idx, 2) => match value.modifiers[0] {
+                        5 => u8::try_from(value.modifiers[1])
+                            .or(Err(ModifierError::VariantNotFound(
                                 stringify!($enum_name).to_string(),
-                                u,
-                                $apply_idx,
-                            )),
-                        },
-                        3 => {
-                            if codes[0] == $apply_idx && codes[1] == 5 {
-                                Ok(codes)
-                            } else {
-                                Err(ModifierError::ValueNotRecognised(
-                                    stringify!($enum_name).to_string(),
-                                    format!("{:?}", codes),
+                                value.modifiers.clone(),
+                            )))
+                            .and_then(|colour_code| {
+                                Self::try_from(&Some(colour_code)).or(Err(
+                                    ModifierError::VariantNotFound(
+                                        stringify!($enum_name).to_string(),
+                                        value.modifiers.clone(),
+                                    ),
                                 ))
-                            }
-                        }
+                            }),
                         _ => Err(ModifierError::ValueNotRecognised(
                             stringify!($enum_name).to_string(),
-                            format!("{:?}", codes),
+                            format!("{:?}", value.modifiers),
+                            String::from("Non 5 codes are not allowed."),
                         )),
-                    })?;
-
-                // Now that we know the code is the correct one, here's the few
-                // possibilities:
-                if codes[0] == $reset_idx {
-                    Ok(Self::Reset)
-                } else {
-                    Self::try_from(&Some(codes[2])).or(Err(ModifierError::VariantNotFound(
+                    },
+                    (idx, 2) if idx != $apply_idx && idx != $reset_idx => {
+                        Err(ModifierError::MismatchedANSICode(
+                            stringify!($enum_name).to_string(),
+                            idx,
+                            $apply_idx,
+                        ))
+                    }
+                    (idx, 0) if idx != $apply_idx && idx != $reset_idx => {
+                        Err(ModifierError::MismatchedANSICode(
+                            stringify!($enum_name).to_string(),
+                            idx,
+                            $reset_idx,
+                        ))
+                    }
+                    _ => Err(ModifierError::ValueNotRecognised(
                         stringify!($enum_name).to_string(),
-                        codes,
-                    )))
+                        format!("{:?}:{:?}", value.code, value.modifiers),
+                        String::from("Wrong combination of codes."),
+                    )),
                 }
+            }
+        }
+
+        impl TryFrom<&str> for $enum_name {
+            type Error = ModifierError;
+
+            /// Use ANSIEscapeCode to parse the str first, then select variant of itself if successful.
+            fn try_from(value: &str) -> Result<Self, Self::Error> {
+                ANSIEscapeCode::try_from(value).and_then(|ansi| $enum_name::try_from(ansi))
             }
         }
     };

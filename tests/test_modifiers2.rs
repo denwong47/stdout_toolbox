@@ -1,13 +1,4 @@
-use lazy_static::lazy_static;
-use regex::Regex;
 use stdout_toolbox::modifiers2::*;
-
-lazy_static! {
-    // Special modified ESCAPE_CODE_START_PATTERN to test cases where the regex did not
-    // block invalid strings successfully
-    pub static ref LAX_ESCAPE_CODE_START_PATTERN: Regex =
-        Regex::new(r#"^\x1b\[(?P<codes>(?:\w*[;:])*\d+)(?P<end_char>[A-Za-z])"#).unwrap();
-}
 
 #[cfg(test)]
 mod test_try_from_captures {
@@ -21,10 +12,7 @@ mod test_try_from_captures {
         ) => {
             #[test]
             fn $name() {
-                let parsed = LAX_ESCAPE_CODE_START_PATTERN
-                    .captures($text)
-                    .ok_or(ModifierError::ValueIsNotAModifier($text.to_string()))
-                    .and_then(|captures| Colour::try_from(&captures));
+                let parsed: Result<Colour, ModifierError> = Colour::try_from($text);
 
                 if let Ok(variant) = parsed {
                     assert_eq!(variant, $expected.unwrap());
@@ -53,8 +41,8 @@ mod test_try_from_captures {
         Ok::<Colour, ModifierError>(Colour::Reset)
     );
     test_factory!(
-        test_mismatched_command,
-        "\x1b[40m",
+        test_mismatched_apply_command,
+        "\x1b[40:5:125m",
         Err::<Colour, ModifierError>(ModifierError::MismatchedANSICode(
             String::from("Colour"),
             40,
@@ -62,12 +50,20 @@ mod test_try_from_captures {
         ))
     );
     test_factory!(
+        test_mismatched_reset_command,
+        "\x1b[40m",
+        Err::<Colour, ModifierError>(ModifierError::MismatchedANSICode(
+            String::from("Colour"),
+            40,
+            39,
+        ))
+    );
+    test_factory!(
         test_simple_apply_with_nondigit,
         "\x1b[38:a:125m",
-        Err::<Colour, ModifierError>(ModifierError::ValueNotRecognised(
-            String::from("Colour"),
-            String::from("a"),
-        ))
+        Err::<Colour, ModifierError>(ModifierError::ValueIsNotAModifier(String::from(
+            "\x1b[38:a:125m"
+        ),))
     );
     test_factory!(
         test_simple_apply_with_wrong_end_digit,
@@ -82,7 +78,8 @@ mod test_try_from_captures {
         "\x1b[39:5:125m",
         Err::<Colour, ModifierError>(ModifierError::ValueNotRecognised(
             String::from("Colour"),
-            format!("{:?}", vec![39, 5, 125]),
+            format!("{:?}:{:?}", 39, vec![5, 125]),
+            String::from("Wrong combination of codes.")
         ))
     );
     test_factory!(
@@ -90,7 +87,8 @@ mod test_try_from_captures {
         "\x1b[38:6:125m",
         Err::<Colour, ModifierError>(ModifierError::ValueNotRecognised(
             String::from("Colour"),
-            format!("{:?}", vec![38, 6, 125]),
+            format!("{:?}", vec![6, 125]),
+            String::from("Non 5 codes are not allowed.")
         ))
     );
     test_factory!(
