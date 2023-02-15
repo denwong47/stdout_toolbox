@@ -14,10 +14,11 @@ fn main() {
     // =================================================================================
     // TEST WRAPPER
 
-    print!(
-        "Hello, I am in {}!\n",
-        Intensity::Bold.wraps(&Background::BrightRed.wraps("COLOUR"))
-    );
+    let modifier = Modifier::Intensity(Intensity::Bold)
+        + Modifier::Colour(Colour::BrightYellow)
+        + Modifier::Background(Background::Blue);
+
+    print!("Hello, I am in {}!\n", modifier.wraps("COLOUR"));
 
     // let s = String::from("Hello, World!");
     // println!("{}", style1(&s));
@@ -25,16 +26,16 @@ fn main() {
     // =================================================================================
     // TEST PROGRESS BAR
 
-    let bar = ProgressStyle::GrayscaleToWhite.bar(60, Some(6));
+    // let bar = ProgressStyle::GrayscaleToWhite.bar(60, Some(6));
 
-    let size: usize = 2000;
+    // let size: usize = 2000;
 
-    (0..size)
-        .into_iter()
-        .progressed(&bar, size, Some("Progressing... "), None)
-        .for_each(|_| thread::sleep(time::Duration::from_micros(1000)));
+    // (0..size)
+    //     .into_iter()
+    //     .progressed(&bar, size, Some("Progressing... "), None)
+    //     .for_each(|_| thread::sleep(time::Duration::from_micros(1000)));
 
-    println!("\nFinished.");
+    // println!("\nFinished.");
 
     // =================================================================================
     // TEST iter_member_in_str
