@@ -1,6 +1,7 @@
 mod modifiers;
+mod modifiers2;
 #[allow(unused_imports)]
-use modifiers::*;
+use modifiers2::*;
 
 mod progress;
 use progress::*;
@@ -13,12 +14,10 @@ fn main() {
     // =================================================================================
     // TEST WRAPPER
 
-    // let style1 = {
-    //     ForegroundColours::R0G1B2
-    //         .join(BackgroundColours::R3G1B4)
-    //         .join(Intensity::Bold)
-    // }
-    // .wrapper();
+    print!(
+        "Hello, I am in {}!\n",
+        Intensity::Bold.wraps(&Background::BrightRed.wraps("COLOUR"))
+    );
 
     // let s = String::from("Hello, World!");
     // println!("{}", style1(&s));
@@ -35,7 +34,7 @@ fn main() {
         .progressed(&bar, size, Some("Progressing... "), None)
         .for_each(|_| thread::sleep(time::Duration::from_micros(1000)));
 
-    // println!("\nFinished.");
+    println!("\nFinished.");
 
     // =================================================================================
     // TEST iter_member_in_str
