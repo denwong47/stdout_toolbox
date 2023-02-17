@@ -1,44 +1,5 @@
-//! Parsing of [`str`] into a dataclass, [`ANSIEscapeCode`].
-//!
-//! Example
-//! -------
-//!
-//! ```rust
-//! use stdout_toolbox::{ANSIEscapeCode, DEFAULT_SEPARATOR};
-//!
-//! let parsed: ANSIEscapeCode = "\x1b[30m".try_into().unwrap();
-//! assert_eq!(
-//!     parsed,
-//!     ANSIEscapeCode {
-//!         code: Some(30),
-//!         modifiers: Vec::new(),
-//!         sep: DEFAULT_SEPARATOR,
-//!         end_char: 'm',
-//!     }
-//! );
-//!
-//! let parsed: ANSIEscapeCode = "\x1b[20;8H".try_into().unwrap();
-//! assert_eq!(
-//!     parsed,
-//!     ANSIEscapeCode {
-//!         code: None,
-//!         modifiers: vec![20,8],
-//!         sep: DEFAULT_SEPARATOR,
-//!         end_char: 'H',
-//!     }
-//! );
-//!
-//! let parsed: ANSIEscapeCode = "\x1b[38:5:255m".try_into().unwrap();
-//! assert_eq!(
-//!     parsed,
-//!     ANSIEscapeCode {
-//!         code: Some(38),
-//!         modifiers: vec![5,255],
-//!         sep: DEFAULT_SEPARATOR,
-//!         end_char: 'm',
-//!     }
-//! );
-//! ```
+/// Parsing of [`str`] into a dataclass, [`ANSIEscapeCode`].
+///
 use std::fmt;
 
 use lazy_static::lazy_static;
@@ -67,6 +28,63 @@ lazy_static! {
 /// necessarily guarantee that the pattern is meaningful or legal for the specific
 /// command.
 ///
+/// Example
+/// -------
+///
+/// ```rust
+/// use stdout_toolbox::{ANSIEscapeCode, DEFAULT_SEPARATOR};
+///
+/// let parsed: ANSIEscapeCode = "\x1b[30m".try_into().unwrap();
+/// assert_eq!(
+///     parsed,
+///     ANSIEscapeCode {
+///         code: Some(30),
+///         modifiers: Vec::new(),
+///         sep: DEFAULT_SEPARATOR,
+///         end_char: 'm',
+///     }
+/// );
+///
+/// let parsed: ANSIEscapeCode = "\x1b[20;8H".try_into().unwrap();
+/// assert_eq!(
+///     parsed,
+///     ANSIEscapeCode {
+///         code: None,
+///         modifiers: vec![20,8],
+///         sep: DEFAULT_SEPARATOR,
+///         end_char: 'H',
+///     }
+/// );
+///
+/// let parsed: ANSIEscapeCode = "\x1b[38:5:255m".try_into().unwrap();
+/// assert_eq!(
+///     parsed,
+///     ANSIEscapeCode {
+///         code: Some(38),
+///         modifiers: vec![5,255],
+///         sep: DEFAULT_SEPARATOR,
+///         end_char: 'm',
+///     }
+/// );
+///
+/// // Code is less than 0
+/// let parsed: Result<ANSIEscapeCode, _> = "\x1b[-1m".try_into();
+/// assert!(
+///     parsed.is_err(),
+/// );
+///
+/// // End character missing
+/// let parsed: Result<ANSIEscapeCode, _> = "\x1b[38;5;0".try_into();
+/// assert!(
+///     parsed.is_err(),
+/// );
+///
+/// // Pattern does not begin with `\x1b`
+/// let parsed: Result<ANSIEscapeCode, _> = "FooBar\x1b[38;5;0".try_into();
+/// assert!(
+///     parsed.is_err(),
+/// );
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct ANSIEscapeCode {
     /// Command Code.
