@@ -1,3 +1,44 @@
+//! Parsing of [`str`] into a dataclass, [`ANSIEscapeCode`].
+//!
+//! Example
+//! -------
+//!
+//! ```rust
+//! use stdout_toolbox::{ANSIEscapeCode, DEFAULT_SEPARATOR};
+//!
+//! let parsed: ANSIEscapeCode = "\x1b[30m".try_into().unwrap();
+//! assert_eq!(
+//!     parsed,
+//!     ANSIEscapeCode {
+//!         code: Some(30),
+//!         modifiers: Vec::new(),
+//!         sep: DEFAULT_SEPARATOR,
+//!         end_char: 'm',
+//!     }
+//! );
+//!
+//! let parsed: ANSIEscapeCode = "\x1b[20;8H".try_into().unwrap();
+//! assert_eq!(
+//!     parsed,
+//!     ANSIEscapeCode {
+//!         code: None,
+//!         modifiers: vec![20,8],
+//!         sep: DEFAULT_SEPARATOR,
+//!         end_char: 'H',
+//!     }
+//! );
+//!
+//! let parsed: ANSIEscapeCode = "\x1b[38:5:255m".try_into().unwrap();
+//! assert_eq!(
+//!     parsed,
+//!     ANSIEscapeCode {
+//!         code: Some(38),
+//!         modifiers: vec![5,255],
+//!         sep: DEFAULT_SEPARATOR,
+//!         end_char: 'm',
+//!     }
+//! );
+//! ```
 use std::fmt;
 
 use lazy_static::lazy_static;
@@ -6,6 +47,7 @@ use regex::{Captures, Regex};
 
 pub use super::super::{IntoANSIEscapeCode, ModifierError};
 
+/// Default `sep` to use for [`ANSIEscapeCode`].
 pub const DEFAULT_SEPARATOR: char = ';';
 
 // In principle, there is one code that we won't match here, which is `\x1b[H`.
@@ -19,17 +61,48 @@ lazy_static! {
     pub static ref SEP_PATTERN: Regex = Regex::new(r"[:;]").unwrap();
 }
 
-/// A basic dataclass of a deconstructed \x1b[00;00;..m structure.
+/// A basic dataclass of a deconstructed `\x1b[00;00;..m` structure.
+///
+/// This dataclass simply represents a syntax valid ANSI Escape pattern; it does not
+/// necessarily guarantee that the pattern is meaningful or legal for the specific
+/// command.
+///
 #[derive(Debug, PartialEq)]
 pub struct ANSIEscapeCode {
+    /// Command Code.
+    ///
+    /// If `end_char` is `'m'`, then this will be a [`Some<u16>`] containing the
+    /// first code after `\x1b[`. For example, for the colour code of `\x1b[30m`, `code`
+    /// will be [`Some(30_u16)`]. If `end_char` is not `'m'`, `code` shall be [`None`].
     pub code: Option<u16>,
+
+    /// Modifier codes.
+    ///
+    /// a [`Vec`] of [`i32`] collecting all the modifier codes that follows
+    /// `code` above. For commands like `\x1b[2A` to move cursor up by `2` rows,
+    /// `modifiers` will be `vec![2]`; for colour commands like the above `\x1b[30m`
     pub modifiers: Vec<i32>,
+
+    /// Separator char.
+    ///
+    /// Must be either `:` or `;` to be valid.
+    ///
+    /// This is not currently in use when parsing; any code that is parsed will use
+    /// `DEFAULT_SEPARATOR` instead; however if this is set, then `to_string` will
+    /// build the `String` wtih the separator.
     pub sep: char,
+
+    /// The trailing character of the sequence.
+    ///
+    /// Typically `'m'` for most modern commands; but can be any `char` within
+    /// `[A-Za-z]` for other codes such as cursor movement.
+    ///
+    /// Mandatory - without this `char`, the pattern cannot be terminated.
     pub end_char: char,
 }
 #[allow(dead_code)]
 impl ANSIEscapeCode {
-    /// Creates a new ANSIEscapeCode instance with the default separator.
+    /// Creates a new [`ANSIEscapeCode`] instance with the default separator.
     pub fn new(code: Option<u16>, modifiers: Option<Vec<i32>>, end_char: char) -> Self {
         return Self {
             code,
@@ -45,7 +118,7 @@ impl ANSIEscapeCode {
         self
     }
 
-    /// Parse a &str beginning with `\x1b` into a Captures object.
+    /// Parse a [`str`] beginning with `\x1b` into a [`regex::Captures`] object.
     pub fn parse(text: &str) -> Result<Captures, ModifierError> {
         ESCAPE_CODE_START_PATTERN
             .captures(text)
@@ -162,11 +235,11 @@ where
     U: IntoANSIEscapeCode,
 {
     /// Global implementation for anything that has the IntoANSIEscapeCode trait
-    /// to have a From<U> and Into<ANSIEscapeCode> implemented.
+    /// to have a `From<U>` and `Into<ANSIEscapeCode>` implemented.
     ///
     /// This is necessary because we want to have the conversion code to reside within
-    /// the struct U, but if we just implement Into<ANSIEscapeCode> there,
-    /// From<U> won't be implemented for ANSIEscapeCode then. Hence an intermediary
+    /// the struct U, but if we just implement `Into<ANSIEscapeCode>` there,
+    /// `From<U>` won't be implemented for ANSIEscapeCode then. Hence an intermediary
     /// trait is required.
     fn from(value: &U) -> Self {
         value.into_ansi_escape_code()
