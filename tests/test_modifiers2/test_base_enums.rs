@@ -1,3 +1,6 @@
+//! Test base modifier enums.
+//!
+//! This does not include tests for `unified::Modifier`.
 use stdout_toolbox::modifiers2::*;
 
 #[cfg(test)]
@@ -31,76 +34,78 @@ mod test_try_from_captures {
     }
 
     test_factory!(
-        test_simple_word,
+        simple_word,
         "\x1b[38:5:125m",
-        Ok::<Colour, ModifierError>(Colour::R3G0B1)
+        Ok::<_, ModifierError>(Colour::R3G0B1)
     );
     test_factory!(
-        test_simple_apply,
+        simple_apply,
         "\x1b[39m",
-        Ok::<Colour, ModifierError>(Colour::Reset)
+        Ok::<_, ModifierError>(Colour::Reset)
     );
     test_factory!(
-        test_mismatched_apply_command,
+        mismatched_apply_command,
         "\x1b[40:5:125m",
-        Err::<Colour, ModifierError>(ModifierError::MismatchedANSICode(
+        Err::<Colour, _>(ModifierError::MismatchedANSICode(
             String::from("Colour"),
             40,
             38,
         ))
     );
     test_factory!(
-        test_mismatched_reset_command,
+        mismatched_reset_command,
         "\x1b[40m",
-        Err::<Colour, ModifierError>(ModifierError::MismatchedANSICode(
+        Err::<Colour, _>(ModifierError::MismatchedANSICode(
             String::from("Colour"),
             40,
             39,
         ))
     );
     test_factory!(
-        test_simple_apply_with_nondigit,
+        simple_apply_with_nondigit,
         "\x1b[38:a:125m",
-        Err::<Colour, ModifierError>(ModifierError::ValueIsNotAModifier(String::from(
-            "\x1b[38:a:125m"
-        ),))
+        Err::<Colour, _>(ModifierError::ValueIsNotAModifier(
+            String::from("\x1b[38:a:125m"),
+            String::from("Unmatchable pattern."),
+        ))
     );
     test_factory!(
-        test_simple_apply_with_wrong_end_digit,
+        simple_apply_with_wrong_end_digit,
         "\x1b[38:5:125n",
-        Err::<Colour, ModifierError>(ModifierError::UnexpectedEndCharacter(
+        Err::<Colour, _>(ModifierError::UnexpectedEndCharacter(
             String::from("Colour"),
             String::from("n"),
         ))
     );
     test_factory!(
-        test_reset_with_extra_codes,
+        reset_with_extra_codes,
         "\x1b[39:5:125m",
-        Err::<Colour, ModifierError>(ModifierError::ValueNotRecognised(
+        Err::<Colour, _>(ModifierError::ValueNotRecognised(
             String::from("Colour"),
             format!("{:?}:{:?}", 39, vec![5, 125]),
             String::from("Wrong combination of codes.")
         ))
     );
     test_factory!(
-        test_apply_with_wrong_code,
+        apply_with_wrong_code,
         "\x1b[38:6:125m",
-        Err::<Colour, ModifierError>(ModifierError::ValueNotRecognised(
+        Err::<Colour, _>(ModifierError::ValueNotRecognised(
             String::from("Colour"),
             format!("{:?}", vec![6, 125]),
             String::from("Non 5 codes are not allowed.")
         ))
     );
     test_factory!(
-        test_simple_word_with_trailing_text,
+        simple_word_with_trailing_text,
         "\x1b[38:5:125mThis is some extra text added",
-        Ok::<Colour, ModifierError>(Colour::R3G0B1)
+        Ok::<_, ModifierError>(Colour::R3G0B1)
     );
     test_factory!(
-        test_simple_word_with_leading_text,
+        simple_word_with_leading_text,
         "This is some extra text added\x1b[38:5:125m",
-        Err::<Colour, ModifierError>(ModifierError::ValueIsNotAModifier(String::from(
-            "This is some extra text added\u{1b}[38:5:125m"
-        )))
+        Err::<Colour, _>(ModifierError::ValueIsNotAModifier(
+            String::from("This is some extra text added\u{1b}[38:5:125m"),
+            String::from("Unmatchable pattern."),
+        ))
     );
 }

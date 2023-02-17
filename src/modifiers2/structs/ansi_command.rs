@@ -8,7 +8,9 @@ pub use super::super::{IntoANSIEscapeCode, ModifierError};
 
 pub const DEFAULT_SEPARATOR: char = ';';
 
-const BASE_CODE_PATTERN: &str = r#"\x1b\[(?P<codes>(?:\d+[;:])*\d+)(?P<end_char>[A-Za-z])"#;
+// In principle, there is one code that we won't match here, which is `\x1b[H`.
+// However this "origin position" code can be easily expressed as `\x1b[0;0H`.
+const BASE_CODE_PATTERN: &str = r#"\x1b\[(?P<codes>(?:\-?\d+[;:])*\-?\d+)(?P<end_char>[A-Za-z])"#;
 
 lazy_static! {
     pub static ref ESCAPE_CODE_PATTERN: Regex = Regex::new(BASE_CODE_PATTERN).unwrap();
@@ -47,7 +49,10 @@ impl ANSIEscapeCode {
     pub fn parse(text: &str) -> Result<Captures, ModifierError> {
         ESCAPE_CODE_START_PATTERN
             .captures(text)
-            .ok_or(ModifierError::ValueIsNotAModifier(text.to_string()))
+            .ok_or(ModifierError::ValueIsNotAModifier(
+                text.to_string(),
+                String::from("Unmatchable pattern."),
+            ))
     }
 }
 impl TryFrom<&str> for ANSIEscapeCode {
@@ -99,13 +104,14 @@ impl<'t> TryFrom<Captures<'t>> for ANSIEscapeCode {
             .and_then(|code| {
                 (*code).try_into().or(
                     // ANSI Code not within u8
-                    Err(ModifierError::ValueIsNotAModifier(format!(
-                        "{:?}",
+                    Err(ModifierError::ValueIsNotAModifier(
                         captures
                             .get(0)
                             .map(|m| m.as_str())
                             .unwrap_or("(unparsable match)")
-                    ))),
+                            .to_string(),
+                        String::from("Code is not a valid u16 integer."),
+                    )),
                 )
             })?;
 

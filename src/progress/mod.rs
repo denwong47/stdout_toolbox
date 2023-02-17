@@ -10,6 +10,7 @@ pub enum ProgressStyle {
     Numbers,
 }
 impl ProgressStyle {
+    #[allow(dead_code)]
     pub fn bar(&self, length: usize, blur: Option<usize>) -> ProgressBar {
         match self {
             Self::Arrow => ProgressBar::new("\x20>=", length, None),

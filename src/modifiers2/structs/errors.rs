@@ -3,8 +3,8 @@ use thiserror::Error;
 /// A enum of possible error types during modifier operations.
 #[derive(Error, Debug)]
 pub enum ModifierError {
-    #[error("{0:?} is not an ANSI modifier.")]
-    ValueIsNotAModifier(String),
+    #[error("{0:?} is not an ANSI modifier: {1}")]
+    ValueIsNotAModifier(String, String),
 
     #[error("bad Regex passed to parser.")]
     BadRegexPattern,

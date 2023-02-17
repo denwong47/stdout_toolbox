@@ -4,10 +4,12 @@ mod modifiers2;
 use modifiers2::*;
 
 mod progress;
+#[allow(unused_imports)]
 use progress::*;
 
 mod text;
 
+#[allow(unused_imports)]
 use std::{thread, time};
 
 fn main() {
