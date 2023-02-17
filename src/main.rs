@@ -16,7 +16,7 @@ fn main() {
 
     let modifier = Modifier::Intensity(Intensity::Bold)
         + Modifier::Colour(Colour::BrightYellow)
-        + Modifier::Background(Background::Blue);
+        + Modifier::Background(Background::R3G0B1);
 
     print!("Hello, I am in {}!\n", modifier.wraps("COLOUR"));
 

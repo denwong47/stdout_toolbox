@@ -1,4 +1,4 @@
-use std::default;
+use std::{default, fmt};
 use strum_macros::EnumIter;
 
 use enum_index::*;
@@ -37,15 +37,15 @@ impl IntoANSIEscapeCode for Intensity {
     }
 }
 
-impl ToString for Intensity {
+impl fmt::Display for Intensity {
     /// Transform the object into ANSIEscapeCode, then use that to generate
     /// a String.
     ///
     /// This also implements Display.
-    fn to_string(&self) -> String {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let ansi: ANSIEscapeCode = self.into();
 
-        ansi.to_string()
+        write!(f, "{}", ansi.to_string())
     }
 }
 

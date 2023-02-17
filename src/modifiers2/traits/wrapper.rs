@@ -13,11 +13,9 @@ where
     fn wraps(&self, text: &str) -> String {
         format!(
             "{}{}{}",
-            self.into_ansi_escape_code().to_string(),
+            self.into_ansi_escape_code(),
             text,
-            self.resetter(Some(text))
-                .into_ansi_escape_code()
-                .to_string(),
+            self.resetter(Some(text)).into_ansi_escape_code(),
         )
     }
 }

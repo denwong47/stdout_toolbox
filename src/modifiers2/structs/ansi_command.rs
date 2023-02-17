@@ -1,3 +1,5 @@
+use std::fmt;
+
 use lazy_static::lazy_static;
 
 use regex::{Captures, Regex};
@@ -54,6 +56,16 @@ impl TryFrom<&str> for ANSIEscapeCode {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let captures = Self::parse(value)?;
 
+        // Just use TryFrom<Captures<'t>> to do the job for us.
+        Self::try_from(captures)
+    }
+}
+impl<'t> TryFrom<Captures<'t>> for ANSIEscapeCode {
+    type Error = ModifierError;
+
+    fn try_from(value: Captures) -> Result<Self, Self::Error> {
+        let captures = value; // Rename value: change owner
+
         let codes: Vec<i32> = {
             captures
                 .name("codes")
@@ -87,7 +99,13 @@ impl TryFrom<&str> for ANSIEscapeCode {
             .and_then(|code| {
                 (*code).try_into().or(
                     // ANSI Code not within u8
-                    Err(ModifierError::ValueIsNotAModifier(format!("{:?}", value))),
+                    Err(ModifierError::ValueIsNotAModifier(format!(
+                        "{:?}",
+                        captures
+                            .get(0)
+                            .map(|m| m.as_str())
+                            .unwrap_or("(unparsable match)")
+                    ))),
                 )
             })?;
 
@@ -104,15 +122,15 @@ impl TryFrom<&str> for ANSIEscapeCode {
         Ok(Self::new(code, modifiers, end_char))
     }
 }
-impl ToString for ANSIEscapeCode {
-    fn to_string(&self) -> String {
+impl fmt::Display for ANSIEscapeCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let modifier_string = self.modifiers.iter().fold(String::new(), |mut lhs, rhs| {
             lhs.push(self.sep);
             lhs.push_str(&rhs.to_string());
             lhs
         });
 
-        format!("\x1b[{}{}{}", self.code, modifier_string, self.end_char)
+        write!(f, "\x1b[{}{}{}", self.code, modifier_string, self.end_char)
     }
 }
 impl<U> From<&U> for ANSIEscapeCode
