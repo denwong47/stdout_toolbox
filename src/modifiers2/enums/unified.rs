@@ -3,7 +3,7 @@
 
 use std::{fmt, ops};
 
-use super::super::{Resetter, StringWrapper};
+use super::super::{ANSIEscapeCode, ModifierError, Resetter, StringWrapper};
 use super::{Background, Colour, Intensity};
 
 #[allow(dead_code)]
@@ -105,5 +105,41 @@ impl StringWrapper for Modifier {
             Self::Colour(modifier) => modifier.wraps(text),
             Self::Background(modifier) => modifier.wraps(text),
         }
+    }
+}
+
+/// Try to parse an [`ANSIEscapeCode`] into a known [`Modifier`].
+impl TryFrom<ANSIEscapeCode> for Modifier {
+    type Error = ModifierError;
+    fn try_from(value: ANSIEscapeCode) -> Result<Self, Self::Error> {
+        macro_rules! expand_base_enums {
+            ($(($variant:ident, $base_enum:ident, $code:pat, $end_char:literal)),+) => {
+                match (value.code, value.end_char) {
+                    $(
+                        ($code, $end_char) => {
+                            let modifier = $base_enum::try_from(value)?;
+
+                            Ok(Self::$variant(modifier))
+                        },
+                    )+
+                    (Some(code), _) => Err(
+                        ModifierError::UnsupportedANSICode(code),
+                    ),
+                    (_, chr) => Err(
+                        ModifierError::UnsupportedEndChar(chr),
+                    ),
+                }
+            };
+        }
+
+        expand_base_enums!(
+            (Intensity, Intensity, Some(1), 'm'),
+            (Intensity, Intensity, Some(2), 'm'),
+            (Intensity, Intensity, Some(22), 'm'),
+            (Colour, Colour, Some(38), 'm'),
+            (Colour, Colour, Some(39), 'm'),
+            (Background, Background, Some(48), 'm'),
+            (Background, Background, Some(49), 'm')
+        )
     }
 }

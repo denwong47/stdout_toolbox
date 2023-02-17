@@ -22,6 +22,11 @@ fn main() {
 
     print!("Hello, I am in {}!\n", modifier.wraps("COLOUR"));
 
+    println!(
+        "{:?}",
+        Modifier::try_from(ANSIEscapeCode::try_from("\x1b[38;5;125mHelloo").unwrap())
+    );
+
     // let s = String::from("Hello, World!");
     // println!("{}", style1(&s));
 

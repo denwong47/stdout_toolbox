@@ -9,6 +9,12 @@ pub enum ModifierError {
     #[error("bad Regex passed to parser.")]
     BadRegexPattern,
 
+    #[error("{0} is not a supported ANSI code.")]
+    UnsupportedANSICode(u16),
+
+    #[error("{0:?} is not a supported ANSI command character.")]
+    UnsupportedEndChar(char),
+
     #[error("{1:?} is not the correct ANSI code for {0}; {2} expected.")]
     MismatchedANSICode(String, u16, u16),
 
