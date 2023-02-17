@@ -1,4 +1,10 @@
-//! Test for ANSI Modifier
+//! Test for ANSI Modifier.
+//!
+//! An `ANSIModifier` is a simple namespace for an ANSI Escape pattern - there is no
+//! guarantee that its valid or meaningful.
+//!
+//! These tests involves mostly meaningless patterns, but are nonetheless valid
+//! ANSI Escape syntax in principle.
 use stdout_toolbox::modifiers2::*;
 
 mod test_parsing {
@@ -94,6 +100,15 @@ mod test_parsing {
     );
 
     test_factory!(
+        incomplete_modifier,
+        "\x1b[30;60",
+        Err::<ANSIEscapeCode, _>(ModifierError::ValueIsNotAModifier(
+            String::from("\x1b[30;60"),
+            String::from("Unmatchable pattern.")
+        ))
+    );
+
+    test_factory!(
         negative_modifier,
         "\x1b[1:-1m",
         Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), Some(vec![-1]), 'm'))
@@ -133,6 +148,33 @@ mod test_parsing {
     test_factory!(
         move_cursor_absolute,
         "\x1b[30;60H",
+        Ok::<_, ModifierError>(
+            // TODO WRONG - correct this
+            ANSIEscapeCode::new(None, Some(vec![30, 60]), 'H')
+        )
+    );
+
+    test_factory!(
+        extra_trailing_text,
+        "\x1b[30;60HThis is some extra text",
+        Ok::<_, ModifierError>(
+            // TODO WRONG - correct this
+            ANSIEscapeCode::new(None, Some(vec![30, 60]), 'H')
+        )
+    );
+
+    test_factory!(
+        extra_leading_text,
+        "This is some extra text\x1b[30;60H",
+        Err::<ANSIEscapeCode, _>(ModifierError::ValueIsNotAModifier(
+            String::from("This is some extra text\x1b[30;60H"),
+            String::from("Unmatchable pattern.")
+        ))
+    );
+
+    test_factory!(
+        double_pattern,
+        "\x1b[30;60H\x1b[1m",
         Ok::<_, ModifierError>(
             // TODO WRONG - correct this
             ANSIEscapeCode::new(None, Some(vec![30, 60]), 'H')
