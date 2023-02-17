@@ -82,7 +82,7 @@ mod test_try_from_captures {
         "\x1b[39:5:125m",
         Err::<Colour, _>(ModifierError::ValueNotRecognised(
             String::from("Colour"),
-            format!("{:?}:{:?}", 39, vec![5, 125]),
+            format!("{:?}:{:?}", Some(39), vec![5, 125]),
             String::from("Wrong combination of codes.")
         ))
     );

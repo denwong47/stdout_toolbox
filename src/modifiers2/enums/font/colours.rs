@@ -827,11 +827,11 @@ macro_rules! color_builder {
                 self.index()
                     .map(|colour_idx| {
                         // Colour index
-                        ANSIEscapeCode::new($apply_idx, Some(vec![5, colour_idx as i32]), 'm')
+                        ANSIEscapeCode::new(Some($apply_idx), Some(vec![5, colour_idx as i32]), 'm')
                     })
                     .unwrap_or(
                         // Reset
-                        ANSIEscapeCode::new($reset_idx, None, 'm'),
+                        ANSIEscapeCode::new(Some($reset_idx), None, 'm'),
                     )
             }
         }
@@ -874,8 +874,8 @@ macro_rules! color_builder {
                 }
 
                 match (value.code, value.modifiers.len()) {
-                    ($reset_idx, 0) => Ok(Self::Reset),
-                    ($apply_idx, 2) => match value.modifiers[0] {
+                    (Some($reset_idx), 0) => Ok(Self::Reset),
+                    (Some($apply_idx), 2) => match value.modifiers[0] {
                         5 => u8::try_from(value.modifiers[1])
                             .or(Err(ModifierError::VariantNotFound(
                                 stringify!($enum_name).to_string(),
@@ -895,14 +895,14 @@ macro_rules! color_builder {
                             String::from("Non 5 codes are not allowed."),
                         )),
                     },
-                    (idx, 2) if idx != $apply_idx && idx != $reset_idx => {
+                    (Some(idx), 2) if idx != $apply_idx && idx != $reset_idx => {
                         Err(ModifierError::MismatchedANSICode(
                             stringify!($enum_name).to_string(),
                             idx,
                             $apply_idx,
                         ))
                     }
-                    (idx, 0) if idx != $apply_idx && idx != $reset_idx => {
+                    (Some(idx), 0) if idx != $apply_idx && idx != $reset_idx => {
                         Err(ModifierError::MismatchedANSICode(
                             stringify!($enum_name).to_string(),
                             idx,

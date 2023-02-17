@@ -12,6 +12,9 @@ pub enum ModifierError {
     #[error("{1:?} is not the correct ANSI code for {0}; {2} expected.")]
     MismatchedANSICode(String, u16, u16),
 
+    #[error("No ANSI code supplied for {0}; {1} expected.")]
+    MissingANSICode(String, u16),
+
     #[error("{1:?} is not a recognised pattern for {0}: {2}")]
     ValueNotRecognised(String, String, String),
 

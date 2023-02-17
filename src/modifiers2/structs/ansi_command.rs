@@ -22,7 +22,7 @@ lazy_static! {
 /// A basic dataclass of a deconstructed \x1b[00;00;..m structure.
 #[derive(Debug, PartialEq)]
 pub struct ANSIEscapeCode {
-    pub code: u16,
+    pub code: Option<u16>,
     pub modifiers: Vec<i32>,
     pub sep: char,
     pub end_char: char,
@@ -30,7 +30,7 @@ pub struct ANSIEscapeCode {
 #[allow(dead_code)]
 impl ANSIEscapeCode {
     /// Creates a new ANSIEscapeCode instance with the default separator.
-    pub fn new(code: u16, modifiers: Option<Vec<i32>>, end_char: char) -> Self {
+    pub fn new(code: Option<u16>, modifiers: Option<Vec<i32>>, end_char: char) -> Self {
         return Self {
             code,
             modifiers: modifiers.unwrap_or(Vec::new()),
@@ -91,32 +91,6 @@ impl<'t> TryFrom<Captures<'t>> for ANSIEscapeCode {
                 })
         }?;
 
-        let code: u16 = codes
-            .first()
-            .ok_or(
-                // Codes are empty
-                ModifierError::ValueNotRecognised(
-                    stringify!($enum_name).to_string(),
-                    format!("{:?}", codes),
-                    String::from("No codes provided."),
-                ),
-            )
-            .and_then(|code| {
-                (*code).try_into().or(
-                    // ANSI Code not within u8
-                    Err(ModifierError::ValueIsNotAModifier(
-                        captures
-                            .get(0)
-                            .map(|m| m.as_str())
-                            .unwrap_or("(unparsable match)")
-                            .to_string(),
-                        String::from("Code is not a valid u16 integer."),
-                    )),
-                )
-            })?;
-
-        let modifiers = Some(Vec::from(&codes[1..]));
-
         let end_char = captures
             .name("end_char")
             .ok_or(ModifierError::BadRegexPattern)?
@@ -125,18 +99,62 @@ impl<'t> TryFrom<Captures<'t>> for ANSIEscapeCode {
             .next()
             .unwrap();
 
+        let (code, modifiers) = match end_char {
+            'm' => {
+                let code: u16 = codes
+                    .first()
+                    .ok_or(
+                        // Codes are empty
+                        ModifierError::ValueNotRecognised(
+                            stringify!($enum_name).to_string(),
+                            format!("{:?}", codes),
+                            String::from("No codes provided."),
+                        ),
+                    )
+                    .and_then(|code| {
+                        (*code).try_into().or(
+                            // ANSI Code not within u8
+                            Err(ModifierError::ValueIsNotAModifier(
+                                captures
+                                    .get(0)
+                                    .map(|m| m.as_str())
+                                    .unwrap_or("(unparsable match)")
+                                    .to_string(),
+                                String::from("Code is not a valid u16 integer."),
+                            )),
+                        )
+                    })?;
+
+                let modifiers = Some(Vec::from(&codes[1..]));
+
+                (Some(code), modifiers)
+            }
+            _ => (None, Some(codes)),
+        };
+
         Ok(Self::new(code, modifiers, end_char))
     }
 }
 impl fmt::Display for ANSIEscapeCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        let modifier_string = self.modifiers.iter().fold(String::new(), |mut lhs, rhs| {
-            lhs.push(self.sep);
-            lhs.push_str(&rhs.to_string());
-            lhs
-        });
+        // If there is a code, use it to start an iterator.
+        // Otherwise, get an empty Vec to start it instead.
+        let code = if let Some(code) = self.code {
+            vec![code as i32]
+        } else {
+            Vec::new()
+        };
 
-        write!(f, "\x1b[{}{}{}", self.code, modifier_string, self.end_char)
+        let modifier_string =
+            code.iter()
+                .chain(self.modifiers.iter())
+                .fold(String::new(), |mut lhs, rhs| {
+                    lhs.push(self.sep);
+                    lhs.push_str(&rhs.to_string());
+                    lhs
+                });
+
+        write!(f, "\x1b[{}{}", modifier_string, self.end_char)
     }
 }
 impl<U> From<&U> for ANSIEscapeCode

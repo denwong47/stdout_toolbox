@@ -33,7 +33,7 @@ impl Resetter for Intensity {
 
 impl IntoANSIEscapeCode for Intensity {
     fn into_ansi_escape_code(&self) -> ANSIEscapeCode {
-        ANSIEscapeCode::new(self.index(), None, 'm')
+        ANSIEscapeCode::new(Some(self.index()), None, 'm')
     }
 }
 
@@ -68,10 +68,17 @@ impl TryFrom<ANSIEscapeCode> for Intensity {
             ));
         }
 
-        Self::try_from(&value.code).or(Err(ModifierError::MismatchedANSICode(
-            stringify!($enum_name).to_string(),
-            value.code,
-            1,
-        )))
+        if let Some(code) = value.code {
+            Self::try_from(&code).or(Err(ModifierError::MismatchedANSICode(
+                stringify!($enum_name).to_string(),
+                code,
+                1, // For the lack of a better code
+            )))
+        } else {
+            Err(ModifierError::MissingANSICode(
+                stringify!($enum_name).to_string(),
+                1, // For the lack of a better code
+            ))
+        }
     }
 }

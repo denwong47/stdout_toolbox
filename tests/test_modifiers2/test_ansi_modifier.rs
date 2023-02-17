@@ -33,13 +33,13 @@ mod test_parsing {
     test_factory!(
         simple_word,
         "\x1b[1m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, None, 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), None, 'm'))
     );
 
     test_factory!(
         zero_code,
         "\x1b[0m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(0, None, 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(0), None, 'm'))
     );
 
     test_factory!(
@@ -63,25 +63,25 @@ mod test_parsing {
     test_factory!(
         simple_modifier,
         "\x1b[1:1m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, Some(vec![1]), 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), Some(vec![1]), 'm'))
     );
 
     test_factory!(
         multiple_modifiers,
         "\x1b[1:1:2m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, Some(vec![1, 2]), 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), Some(vec![1, 2]), 'm'))
     );
 
     test_factory!(
         semicolon_separated,
         "\x1b[1;1;2m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, Some(vec![1, 2]), 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), Some(vec![1, 2]), 'm'))
     );
 
     test_factory!(
         mixed_separated,
         "\x1b[1:1;2m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, Some(vec![1, 2]), 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), Some(vec![1, 2]), 'm'))
     );
 
     test_factory!(
@@ -96,14 +96,14 @@ mod test_parsing {
     test_factory!(
         negative_modifier,
         "\x1b[1:-1m",
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, Some(vec![-1]), 'm'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(Some(1), Some(vec![-1]), 'm'))
     );
 
     test_factory!(
         long_modifiers,
         "\x1b[1:2:3:4:5:6:7:8:9:10:11:12:13m",
         Ok::<_, ModifierError>(ANSIEscapeCode::new(
-            1,
+            Some(1),
             Some(vec![2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]),
             'm'
         ))
@@ -121,7 +121,13 @@ mod test_parsing {
     test_factory!(
         move_cursor_up,
         "\x1b[1A", // This is an actual code for moving cursor up
-        Ok::<_, ModifierError>(ANSIEscapeCode::new(1, None, 'A'))
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(None, Some(vec![1]), 'A'))
+    );
+
+    test_factory!(
+        move_cursor_up_negative,
+        "\x1b[-1A", // This is an actual code for moving cursor up
+        Ok::<_, ModifierError>(ANSIEscapeCode::new(None, Some(vec![-1]), 'A'))
     );
 
     test_factory!(
@@ -129,7 +135,7 @@ mod test_parsing {
         "\x1b[30;60H",
         Ok::<_, ModifierError>(
             // TODO WRONG - correct this
-            ANSIEscapeCode::new(30, Some(vec![60]), 'H')
+            ANSIEscapeCode::new(None, Some(vec![30, 60]), 'H')
         )
     );
 }
