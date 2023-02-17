@@ -98,7 +98,8 @@ pub struct ANSIEscapeCode {
     ///
     /// a [`Vec`] of [`i32`] collecting all the modifier codes that follows
     /// `code` above. For commands like `\x1b[2A` to move cursor up by `2` rows,
-    /// `modifiers` will be `vec![2]`; for colour commands like the above `\x1b[30m`
+    /// `modifiers` will be `vec![2]`; for colour commands like the above `\x1b[30m`,
+    /// this will be an empty `vec![]`.
     pub modifiers: Vec<i32>,
 
     /// Separator char.
@@ -152,13 +153,16 @@ impl TryFrom<&str> for ANSIEscapeCode {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let captures = Self::parse(value)?;
 
-        // Just use TryFrom<Captures<'t>> to do the job for us.
+        // Just use [`TryFrom<Captures<'t>>`] to do the job for us.
         Self::try_from(captures)
     }
 }
 impl<'t> TryFrom<Captures<'t>> for ANSIEscapeCode {
     type Error = ModifierError;
 
+    /// Try parsing an [`ANSIEscapeCode`] from a [`regex::Captures`].
+    ///
+    /// Mostly for internal use, due to it being restricted for a single regex pattern.
     fn try_from(value: Captures) -> Result<Self, Self::Error> {
         let captures = value; // Rename value: change owner
 
@@ -227,9 +231,10 @@ impl<'t> TryFrom<Captures<'t>> for ANSIEscapeCode {
     }
 }
 impl fmt::Display for ANSIEscapeCode {
+    /// Format this pattern back into its [`str`] form.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         // If there is a code, use it to start an iterator.
-        // Otherwise, get an empty Vec to start it instead.
+        // Otherwise, get an empty [`Vec`] to start it instead.
         let code = if let Some(code) = self.code {
             vec![code as i32]
         } else {
@@ -252,13 +257,13 @@ impl<U> From<&U> for ANSIEscapeCode
 where
     U: IntoANSIEscapeCode,
 {
-    /// Global implementation for anything that has the IntoANSIEscapeCode trait
-    /// to have a `From<U>` and `Into<ANSIEscapeCode>` implemented.
+    /// Global implementation for anything that has the [`IntoANSIEscapeCode`] trait
+    /// to have a [`From<U>`] and [`Into<ANSIEscapeCode>`] implemented.
     ///
     /// This is necessary because we want to have the conversion code to reside within
-    /// the struct U, but if we just implement `Into<ANSIEscapeCode>` there,
-    /// `From<U>` won't be implemented for ANSIEscapeCode then. Hence an intermediary
-    /// trait is required.
+    /// the struct U, but if we just implement [`Into<ANSIEscapeCode>`] there,
+    /// [`From<U>`] won't be implemented for [`ANSIEscapeCode`] then. Hence an
+    /// intermediary trait is required.
     fn from(value: &U) -> Self {
         value.into_ansi_escape_code()
     }
